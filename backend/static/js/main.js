@@ -457,6 +457,23 @@ function initDashboard() {
         });
     });
     const exportBtn = document.getElementById("exportBtn");
+    const fetchBtn = document.getElementById("fetchBtn");
+    if (fetchBtn) {
+        fetchBtn.addEventListener("click", async () => {
+            fetchBtn.setAttribute("disabled", "true");
+            fetchBtn.textContent = "Aggiorno...";
+            try {
+                await fetch("/api/fetch", { method: "POST" });
+                location.reload();
+            } catch (err) {
+                alert("Errore durante il fetch");
+                console.error(err);
+            } finally {
+                fetchBtn.removeAttribute("disabled");
+                fetchBtn.textContent = "Aggiorna annunci";
+            }
+        });
+    }
     if (exportBtn) {
         exportBtn.addEventListener("click", () => {
             const visibleRows = rows.filter((row) => row.style.display !== "none");

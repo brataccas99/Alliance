@@ -45,41 +45,49 @@
             </div>
         </header>
 
-        <!-- Statistics Cards -->
+                <!-- Statistics Cards -->
         <section class="stats-grid">
             <div class="stat-card clickable" data-quick-filter="all" title="Mostra tutti gli annunci">
-                <div class="stat-icon">📊</div>
                 <div class="stat-content">
                     <p class="stat-label">Totale Annunci</p>
                     <p class="stat-value">{{ announcements|length }}</p>
                 </div>
             </div>
             <div class="stat-card stat-highlight clickable" data-quick-filter="highlight" title="Filtra annunci evidenziati">
-                <div class="stat-icon">⭐</div>
                 <div class="stat-content">
                     <p class="stat-label">Evidenziati</p>
                     <p class="stat-value">{{ announcements|selectattr('highlight')|list|length }}</p>
                 </div>
             </div>
             <div class="stat-card stat-success clickable" data-quick-filter="open" title="Filtra annunci aperti">
-                <div class="stat-icon">✅</div>
                 <div class="stat-content">
                     <p class="stat-label">Aperti</p>
                     <p class="stat-value">{{ announcements|selectattr('status', 'equalto', 'Open')|list|length }}</p>
                 </div>
             </div>
+            <div class="stat-card clickable" data-quick-filter="pnrr" title="Filtra annunci PNRR">
+                <div class="stat-content">
+                    <p class="stat-label">PNRR</p>
+                    {% set pnrr_count = announcements | selectattr('category') | select('lower') | select('contains', 'pnrr') | list | length %}
+                    <p class="stat-value">{{ pnrr_count }}</p>
+                </div>
+            </div>
+            <div class="stat-card clickable" data-quick-filter="pon" title="Filtra annunci PON">
+                <div class="stat-content">
+                    <p class="stat-label">PON</p>
+                    {% set pon_count = announcements | selectattr('category') | select('lower') | select('contains', 'pon') | list | length %}
+                    <p class="stat-value">{{ pon_count }}</p>
+                </div>
+            </div>
             <div class="stat-card clickable" data-quick-filter="recent" title="Ultimi 7 giorni">
-                <div class="stat-icon">🕒</div>
                 <div class="stat-content">
                     <p class="stat-label">Recenti</p>
-                    {% set week_ago = (None, None, None, None, None, None, None)|list %}
                     {% set recent_count = announcements|selectattr('date')|select('ne', None)|list|length %}
                     <p class="stat-value">{{ recent_count }}</p>
                 </div>
             </div>
         </section>
-
-        <!-- Saved Presets & Recently Viewed -->
+<!-- Saved Presets & Recently Viewed -->
         <section class="presets-section">
             <div class="presets-container">
                 <div class="presets-header">

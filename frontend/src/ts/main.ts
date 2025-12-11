@@ -645,6 +645,25 @@ function initDashboard(): void {
 
   // Export to CSV functionality
   const exportBtn = document.getElementById("exportBtn");
+  const fetchBtn = document.getElementById("fetchBtn");
+
+  if (fetchBtn) {
+    fetchBtn.addEventListener("click", async () => {
+      fetchBtn.setAttribute("disabled", "true");
+      fetchBtn.textContent = "Aggiorno...";
+      try {
+        await fetch("/api/fetch", { method: "POST" });
+        location.reload();
+      } catch (err) {
+        alert("Errore durante il fetch");
+        console.error(err);
+      } finally {
+        fetchBtn.removeAttribute("disabled");
+        fetchBtn.textContent = "Aggiorna annunci";
+      }
+    });
+  }
+
   if (exportBtn) {
     exportBtn.addEventListener("click", () => {
       const visibleRows = rows.filter((row) => row.style.display !== "none");
@@ -768,6 +787,22 @@ function initDashboard(): void {
       updateBulkActions();
     });
   }
+  const fetchBtn = document.getElementById("fetchBtn");          
+  if (fetchBtn) {                                                
+    fetchBtn.addEventListener("click", async () => {             
+      fetchBtn.setAttribute("disabled", "true");                 
+      fetchBtn.textContent = "Aggiorno...";                      
+      try {                                                      
+        await fetch("/api/fetch", { method: "POST" });           
+        location.reload();                                       
+      } catch (e) {                                              
+        alert("Errore durante il fetch");                        
+      } finally {                                                
+        fetchBtn.removeAttribute("disabled");                    
+        fetchBtn.textContent = "Aggiorna annunci";               
+      }                                                          
+    });                                                          
+  }          
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
