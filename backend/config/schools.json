@@ -7,6 +7,734 @@
       "pnrr_url": "https://www.liceoalfano1.edu.it/pnrr-futura/",
       "city": "Salerno",
       "active": true
+    },
+    {
+      "id": "liceo_severi",
+      "name": "Liceo Francesco Severi",
+      "base_url": "https://www.liceoseverisalerno.edu.it",
+      "pnrr_url": "https://www.liceoseverisalerno.edu.it/pnrr/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "liceo_tasso",
+      "name": "Liceo Classico Torquato Tasso",
+      "base_url": "https://www.liceotassosalerno.it",
+      "pnrr_url": "https://www.liceotassosalerno.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "regina_margherita_pnrr",
+      "name": "IIS Regina Margherita - PNRR",
+      "base_url": "https://www.reginamargherita.edu.it",
+      "pnrr_url": "https://www.reginamargherita.edu.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "regina_margherita_pon",
+      "name": "IIS Regina Margherita - PON",
+      "base_url": "https://www.reginamargherita.edu.it",
+      "pnrr_url": "https://www.reginamargherita.edu.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "liceo_alfano1_pon",
+      "name": "Liceo Alfano I - PON",
+      "base_url": "https://www.liceoalfano1.edu.it",
+      "pnrr_url": "https://www.liceoalfano1.edu.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "liceo_severi_pon",
+      "name": "Liceo Francesco Severi - PON",
+      "base_url": "https://www.liceoseverisalerno.edu.it",
+      "pnrr_url": "https://www.liceoseverisalerno.edu.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "trasparenza_scuole",
+      "name": "Trasparenza Scuole - IIS Genovesi",
+      "base_url": "https://www.trasparenzascuole.it",
+      "pnrr_url": "https://www.trasparenzascuole.it/Public/APDPublic_ExtV2.aspx?CF=80023610654",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "galilei_di_palo",
+      "name": "Liceo Scientifico Galilei - DI Palo",
+      "base_url": "https://www.galileidipalo.edu.it",
+      "pnrr_url": "https://www.galileidipalo.edu.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "iis_giovanni23_pnrr",
+      "name": "IIS Giovanni XXIII - PNRR",
+      "base_url": "https://www.iisgiovanni23.edu.it",
+      "pnrr_url": "https://www.iisgiovanni23.edu.it/pnrr/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "iis_giovanni23_pon",
+      "name": "IIS Giovanni XXIII - PON",
+      "base_url": "https://www.iisgiovanni23.edu.it",
+      "pnrr_url": "https://www.iisgiovanni23.edu.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "profagri_pnrr",
+      "name": "Profagri Salerno - PNRR",
+      "base_url": "https://www.profagrisalerno.edu.it",
+      "pnrr_url": "https://www.profagrisalerno.edu.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "profagri_pon",
+      "name": "Profagri Salerno - PON",
+      "base_url": "https://www.profagrisalerno.edu.it",
+      "pnrr_url": "https://www.profagrisalerno.edu.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ictasso_pnrr",
+      "name": "IC Tasso Salerno - PNRR",
+      "base_url": "https://www.ictassosalerno.edu.it",
+      "pnrr_url": "https://www.ictassosalerno.edu.it/tipologia-progetto/pnrr/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ictasso_pon",
+      "name": "IC Tasso Salerno - PON",
+      "base_url": "https://www.ictassosalerno.edu.it",
+      "pnrr_url": "https://www.ictassosalerno.edu.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_medaglie_pnrr",
+      "name": "IC Medaglie d'Oro - PNRR",
+      "base_url": "https://www.icmedagliedoro.edu.it",
+      "pnrr_url": "https://www.icmedagliedoro.edu.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_medaglie_pon",
+      "name": "IC Medaglie d'Oro - PON",
+      "base_url": "https://www.icmedagliedoro.edu.it",
+      "pnrr_url": "https://www.icmedagliedoro.edu.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_medaglie_scuola_viva",
+      "name": "IC Medaglie d'Oro - Scuola Viva",
+      "base_url": "https://www.icmedagliedoro.edu.it",
+      "pnrr_url": "https://www.icmedagliedoro.edu.it/scuola-viva/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_donmilani_pnrr",
+      "name": "IC Don Milani SA - PNRR",
+      "base_url": "https://www.icdonmilanisa.edu.it",
+      "pnrr_url": "https://www.icdonmilanisa.edu.it/tipologia-progetto/pnrr/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_donmilani_pon",
+      "name": "IC Don Milani SA - PON",
+      "base_url": "https://www.icdonmilanisa.edu.it",
+      "pnrr_url": "https://www.icdonmilanisa.edu.it/tipologia-progetto/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_liquara_pnrr",
+      "name": "IC G. Liquara Ogliara - PNRR",
+      "base_url": "https://www.comprensivogliara.it",
+      "pnrr_url": "https://www.comprensivogliara.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_liquara_pon",
+      "name": "IC G. Liquara Ogliara - PON",
+      "base_url": "https://www.comprensivogliara.it",
+      "pnrr_url": "https://www.comprensivogliara.it/pon",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_calcedonia_pnrr",
+      "name": "IC Calcedonia Santo Tommaso - PNRR",
+      "base_url": "https://www.iccalcedoniasantommasosalerno.edu.it",
+      "pnrr_url": "https://www.iccalcedoniasantommasosalerno.edu.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_calcedonia_pon",
+      "name": "IC Calcedonia Santo Tommaso - PON",
+      "base_url": "https://www.iccalcedoniasantommasosalerno.edu.it",
+      "pnrr_url": "https://www.iccalcedoniasantommasosalerno.edu.it/pon",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_montalcini_pnrr",
+      "name": "IC Rita Levi Montalcini - PNRR",
+      "base_url": "https://www.icritalevimontalcini.edu.it",
+      "pnrr_url": "https://www.icritalevimontalcini.edu.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_montalcini_pon",
+      "name": "IC Rita Levi Montalcini - PON",
+      "base_url": "https://www.icritalevimontalcini.edu.it",
+      "pnrr_url": "https://www.icritalevimontalcini.edu.it/pon",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_giovannipaolo_pon",
+      "name": "IC Giovanni Paolo II - PON",
+      "base_url": "https://www.icgiovannipaolosecondosalerno.edu.it",
+      "pnrr_url": "https://www.icgiovannipaolosecondosalerno.edu.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_giovannipaolo_pnrr",
+      "name": "IC Giovanni Paolo II - PNRR",
+      "base_url": "https://www.icgiovannipaolosecondosalerno.edu.it",
+      "pnrr_url": "https://www.icgiovannipaolosecondosalerno.edu.it/pnrr-futura",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "liceo_desanctis_pnrr",
+      "name": "Liceo Classico De Sanctis - PNRR",
+      "base_url": "https://www.liceoclassicodesanctis.it",
+      "pnrr_url": "https://www.liceoclassicodesanctis.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "liceo_desanctis_pon",
+      "name": "Liceo Classico De Sanctis - PON",
+      "base_url": "https://www.liceoclassicodesanctis.it",
+      "pnrr_url": "https://www.liceoclassicodesanctis.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "santacaterina_pnrr",
+      "name": "S. Caterina Amendola - PNRR",
+      "base_url": "https://www.santacaterina-amendola.it",
+      "pnrr_url": "https://www.santacaterina-amendola.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "santacaterina_pon",
+      "name": "S. Caterina Amendola - PON",
+      "base_url": "https://www.santacaterina-amendola.it",
+      "pnrr_url": "https://www.santacaterina-amendola.it/pon/",
+      "city": "Salerno",
+      "active": true
+    },
+    {
+      "id": "ic_marconi_battipaglia",
+      "name": "IC Marconi Battipaglia",
+      "base_url": "https://www.icmarconibattipaglia.edu.it",
+      "pnrr_url": "https://www.icmarconibattipaglia.edu.it/tipologia-articolo/notizie/",
+      "city": "Battipaglia",
+      "active": true
+    },
+    {
+      "id": "ic_gatto_agropoli",
+      "name": "IC Gatto Agropoli",
+      "base_url": "https://www.istitutocomprensivogatto.edu.it",
+      "pnrr_url": "https://www.istitutocomprensivogatto.edu.it/archivio-news",
+      "city": "Agropoli",
+      "active": true
+    },
+    {
+      "id": "lavoro_gloriosi_pnrr",
+      "name": "IIS Gloriosi Battipaglia - PNRR",
+      "base_url": "https://www.bestagloriosi.edu.it",
+      "pnrr_url": "https://www.bestagloriosi.edu.it/pnrr-futura/",
+      "city": "Battipaglia",
+      "active": true
+    },
+    {
+      "id": "lavoro_gloriosi_pon",
+      "name": "IIS Gloriosi Battipaglia - PON",
+      "base_url": "https://www.bestagloriosi.edu.it",
+      "pnrr_url": "https://www.bestagloriosi.edu.it/pon/",
+      "city": "Battipaglia",
+      "active": true
+    },
+    {
+      "id": "liceo_emedi_pnrr",
+      "name": "Liceo E. Medi Battipaglia - PNRR",
+      "base_url": "https://www.liceoemedi.edu.it",
+      "pnrr_url": "https://www.liceoemedi.edu.it/pnrr-futura/",
+      "city": "Battipaglia",
+      "active": true
+    },
+    {
+      "id": "liceo_emedi_pon",
+      "name": "Liceo E. Medi Battipaglia - PON",
+      "base_url": "https://www.liceoemedi.edu.it",
+      "pnrr_url": "https://www.liceoemedi.edu.it/pon/",
+      "city": "Battipaglia",
+      "active": true
+    },
+    {
+      "id": "iis_ferrari_pnrr",
+      "name": "IIS Ferrari Battipaglia - PNRR",
+      "base_url": "https://www.iisferraribattipaglia.edu.it",
+      "pnrr_url": "https://www.iisferraribattipaglia.edu.it/pnrr-futura/",
+      "city": "Battipaglia",
+      "active": true
+    },
+    {
+      "id": "iis_ferrari_pon",
+      "name": "IIS Ferrari Battipaglia - PON",
+      "base_url": "https://www.iisferraribattipaglia.edu.it",
+      "pnrr_url": "https://www.iisferraribattipaglia.edu.it/pon/",
+      "city": "Battipaglia",
+      "active": true
+    },
+    {
+      "id": "primocircolo_eboli_pnrr",
+      "name": "1° Circolo Eboli - PNRR",
+      "base_url": "https://www.primocircoloeboli.edu.it",
+      "pnrr_url": "https://www.primocircoloeboli.edu.it/pagine/pnrr",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "primocircolo_eboli_pon",
+      "name": "1° Circolo Eboli - PON",
+      "base_url": "https://www.primocircoloeboli.edu.it",
+      "pnrr_url": "https://www.primocircoloeboli.edu.it/pagine/pon",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "ic_matteo_ripa_pnrr1",
+      "name": "IC Matteo Ripa - PNRR Priorità 1",
+      "base_url": "https://icmatteoripa.edu.it",
+      "pnrr_url": "https://icmatteoripa.edu.it/tipologia-documento/pn-21-27-priorita-1/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "ic_matteo_ripa_pnrr_stem",
+      "name": "IC Matteo Ripa - STEM",
+      "base_url": "https://icmatteoripa.edu.it",
+      "pnrr_url": "https://icmatteoripa.edu.it/tipologia-documento/pnrr-spazi-e-strumenti-digitali-per-le-stem/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "ic_giacinto_romano_pnrr",
+      "name": "IC Giacinto Romano Eboli - PNRR",
+      "base_url": "https://www.icgiacintoromanoeboli.edu.it",
+      "pnrr_url": "https://www.icgiacintoromanoeboli.edu.it/pnrr-futura/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "ic_giacinto_romano_pon",
+      "name": "IC Giacinto Romano Eboli - PON",
+      "base_url": "https://www.icgiacintoromanoeboli.edu.it",
+      "pnrr_url": "https://www.icgiacintoromanoeboli.edu.it/pn/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "iis_virgilio_gonzaga_pnrr",
+      "name": "IIS Virgilio Gonzaga - PNRR",
+      "base_url": "https://www.istitutovirgiliogonzaga.edu.it",
+      "pnrr_url": "https://www.istitutovirgiliogonzaga.edu.it/documento/pnrr/",
+      "city": "Agropoli",
+      "active": true
+    },
+    {
+      "id": "iis_perito_levi_pnrr_classroom",
+      "name": "IIS Perito Levi - Next Gen Classroom",
+      "base_url": "https://www.iisperitolevi.edu.it",
+      "pnrr_url": "https://www.iisperitolevi.edu.it/tipologia-documento/pnrr-next-generation-classroom-ambienti-di-apprendimento-innovativi/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "iis_perito_levi_pnrr_labs",
+      "name": "IIS Perito Levi - Next Gen Labs",
+      "base_url": "https://www.iisperitolevi.edu.it",
+      "pnrr_url": "https://www.iisperitolevi.edu.it/tipologia-documento/pnrr-next-generation-labs-metodologie-innovative-per-i-laboratori-didattici-professionali-e-digitali/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "iis_perito_levi_pnrr_dispersione",
+      "name": "IIS Perito Levi - Dispersione",
+      "base_url": "https://www.iisperitolevi.edu.it",
+      "pnrr_url": "https://www.iisperitolevi.edu.it/tipologia-documento/pnrr-azioni-di-prevenzione-e-contrasto-alla-dispersione-scolastica-d-m-170-2022/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "iis_perito_levi_pnrr_stem",
+      "name": "IIS Perito Levi - Competenze STEM",
+      "base_url": "https://www.iisperitolevi.edu.it",
+      "pnrr_url": "https://www.iisperitolevi.edu.it/tipologia-documento/pnrr-competenze-stem-e-multilinguistiche-nelle-scuole-statali/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "iis_perito_levi_pnrr_formazione",
+      "name": "IIS Perito Levi - Formazione Digitale",
+      "base_url": "https://www.iisperitolevi.edu.it",
+      "pnrr_url": "https://www.iisperitolevi.edu.it/tipologia-documento/pnrr-formazione-del-personale-per-la-transizione-digitale-nelle-scuole-statali/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "iis_perito_levi_pnrr_divari",
+      "name": "IIS Perito Levi - Riduzione Divari",
+      "base_url": "https://www.iisperitolevi.edu.it",
+      "pnrr_url": "https://www.iisperitolevi.edu.it/tipologia-documento/pnrr-riduzione-dei-divari-negli-apprendimenti-e-contrasto-alla-dispersione-scolastica-d-m-19-2024/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "iis_perito_levi_pon_fse",
+      "name": "IIS Perito Levi - PON FSE",
+      "base_url": "https://www.iisperitolevi.edu.it",
+      "pnrr_url": "https://www.iisperitolevi.edu.it/tipologia-documento/pon-fse/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "iis_perito_levi_pon_fesr",
+      "name": "IIS Perito Levi - PON FESR",
+      "base_url": "https://www.iisperitolevi.edu.it",
+      "pnrr_url": "https://www.iisperitolevi.edu.it/tipologia-documento/pon-fesr/",
+      "city": "Eboli",
+      "active": true
+    },
+    {
+      "id": "ic_capaccio_pnrr",
+      "name": "IC Capaccio Capoluogo - PNRR",
+      "base_url": "https://www.iccapacciocapoluogo.edu.it",
+      "pnrr_url": "https://www.iccapacciocapoluogo.edu.it/tipologia-documento/pnrr/",
+      "city": "Capaccio",
+      "active": true
+    },
+    {
+      "id": "iis_vico_de_vivo_pnrr",
+      "name": "IIS Vico De Vivo - PNRR",
+      "base_url": "https://www.iisvicodevivo.edu.it",
+      "pnrr_url": "https://www.iisvicodevivo.edu.it/pnrr-futura/",
+      "city": "Agro Nocerino",
+      "active": true
+    },
+    {
+      "id": "iis_vico_de_vivo_pon",
+      "name": "IIS Vico De Vivo - PON",
+      "base_url": "https://www.iisvicodevivo.edu.it",
+      "pnrr_url": "https://www.iisvicodevivo.edu.it/pon/",
+      "city": "Agro Nocerino",
+      "active": true
+    },
+    {
+      "id": "liceo_gatto_tags",
+      "name": "Liceo Gatto - PNRR/PON Tag Feed",
+      "base_url": "https://www.liceogatto.edu.it",
+      "pnrr_url": "https://www.liceogatto.edu.it/index.php?option=com_tags&view=tag&layout=list&id[0]=53&id[1]=54&Itemid=1916",
+      "city": "Agropoli",
+      "active": true
+    },
+    {
+      "id": "liceo_genoino_pnrr",
+      "name": "Liceo Genoino - PNRR",
+      "base_url": "https://www.liceogenoino.edu.it",
+      "pnrr_url": "https://www.liceogenoino.edu.it/pnrr-futura/",
+      "city": "Cava de' Tirreni",
+      "active": true
+    },
+    {
+      "id": "liceo_genoino_pon",
+      "name": "Liceo Genoino - PON",
+      "base_url": "https://www.liceogenoino.edu.it",
+      "pnrr_url": "https://www.liceogenoino.edu.it/pon/",
+      "city": "Cava de' Tirreni",
+      "active": true
+    },
+    {
+      "id": "ic_carducci_trezza_pnrr",
+      "name": "IC Carducci Trezza - PNRR",
+      "base_url": "https://www.ic-carduccitrezza.edu.it",
+      "pnrr_url": "https://www.ic-carduccitrezza.edu.it/pnrr-futura/",
+      "city": "Cava de' Tirreni",
+      "active": true
+    },
+    {
+      "id": "ic_carducci_trezza_pon",
+      "name": "IC Carducci Trezza - PON",
+      "base_url": "https://www.ic-carduccitrezza.edu.it",
+      "pnrr_url": "https://www.ic-carduccitrezza.edu.it/pon",
+      "city": "Cava de' Tirreni",
+      "active": true
+    },
+    {
+      "id": "ic_santalucia_cava",
+      "name": "IC Santa Lucia Cava",
+      "base_url": "https://www.icsantaluciacava.edu.it",
+      "pnrr_url": "https://www.icsantaluciacava.edu.it/tipologia-documento/contratto/",
+      "city": "Cava de' Tirreni",
+      "active": true
+    },
+    {
+      "id": "primo_ic_nocera_pnrr",
+      "name": "Primo IC Nocera Inferiore - PNRR",
+      "base_url": "https://www.primoicnocerainferiore.it",
+      "pnrr_url": "https://www.primoicnocerainferiore.it/pnrr-futura/",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "primo_ic_nocera_pon",
+      "name": "Primo IC Nocera Inferiore - PON",
+      "base_url": "https://www.primoicnocerainferiore.it",
+      "pnrr_url": "https://www.primoicnocerainferiore.it/pon",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "ic_nocera2_pnrr",
+      "name": "IC Comprensivo 2 Nocera - PNRR",
+      "base_url": "https://www.comprensivo2nocera.edu.it",
+      "pnrr_url": "https://www.comprensivo2nocera.edu.it/pnrr-futura/",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "ic_nocera2_pon",
+      "name": "IC Comprensivo 2 Nocera - PON",
+      "base_url": "https://www.comprensivo2nocera.edu.it",
+      "pnrr_url": "https://www.comprensivo2nocera.edu.it/pon",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "iis_domenico_rea_pnrr",
+      "name": "IIS Domenico Rea - PNRR",
+      "base_url": "https://www.istitutosuperioredomenicorea.edu.it",
+      "pnrr_url": "https://www.istitutosuperioredomenicorea.edu.it/pnrr/",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "iis_domenico_rea_pon",
+      "name": "IIS Domenico Rea - PON",
+      "base_url": "https://www.istitutosuperioredomenicorea.edu.it",
+      "pnrr_url": "https://www.istitutosuperioredomenicorea.edu.it/pon",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "iis_gb_vico_pnrr",
+      "name": "IIS G.B. Vico - PNRR",
+      "base_url": "https://www.istitutoistruzionesuperioregbvico.edu.it",
+      "pnrr_url": "https://www.istitutoistruzionesuperioregbvico.edu.it/pnrr-futura/",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "iis_gb_vico_pon",
+      "name": "IIS G.B. Vico - PON",
+      "base_url": "https://www.istitutoistruzionesuperioregbvico.edu.it",
+      "pnrr_url": "https://www.istitutoistruzionesuperioregbvico.edu.it/pon",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "is_galizia_pnrr",
+      "name": "IS Galizia - PNRR",
+      "base_url": "https://www.isgalizia.edu.it",
+      "pnrr_url": "https://www.isgalizia.edu.it/pnrr-futura/",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "is_galizia_pon",
+      "name": "IS Galizia - PON",
+      "base_url": "https://www.isgalizia.edu.it",
+      "pnrr_url": "https://www.isgalizia.edu.it/pon/",
+      "city": "Nocera Inferiore",
+      "active": true
+    },
+    {
+      "id": "fresa_pascoli_pnrr",
+      "name": "Fresa Pascoli - PNRR",
+      "base_url": "https://www.fresapascoli.edu.it",
+      "pnrr_url": "https://www.fresapascoli.edu.it/pnrr-futura/",
+      "city": "Angri",
+      "active": true
+    },
+    {
+      "id": "fresa_pascoli_pon",
+      "name": "Fresa Pascoli - PON",
+      "base_url": "https://www.fresapascoli.edu.it",
+      "pnrr_url": "https://www.fresapascoli.edu.it/pon",
+      "city": "Angri",
+      "active": true
+    },
+    {
+      "id": "ic_e_de_filippo_news",
+      "name": "IC E. De Filippo - Avvisi",
+      "base_url": "https://www.icedefilippo.edu.it",
+      "pnrr_url": "https://www.icedefilippo.edu.it/tipologia-articolo/notizie-avvisi/",
+      "city": "Santa Maria di Castellabate",
+      "active": true
+    },
+    {
+      "id": "ic_montalcini_dup_pnrr",
+      "name": "IC Rita Levi Montalcini (Alt) - PNRR",
+      "base_url": "https://www.icritalevimontalcini.edu.it",
+      "pnrr_url": "https://www.icritalevimontalcini.edu.it/pnrr-futura/",
+      "city": "Giffoni Valle Piana",
+      "active": true
+    },
+    {
+      "id": "ic_montalcini_dup_pon",
+      "name": "IC Rita Levi Montalcini (Alt) - PON",
+      "base_url": "https://www.icritalevimontalcini.edu.it",
+      "pnrr_url": "https://www.icritalevimontalcini.edu.it/pon",
+      "city": "Giffoni Valle Piana",
+      "active": true
+    },
+    {
+      "id": "primo_circolo_mercato_pnrr",
+      "name": "1° Circolo Mercato S. Severino - PNRR",
+      "base_url": "https://www.1circolomercatosanseverino.edu.it",
+      "pnrr_url": "https://www.1circolomercatosanseverino.edu.it/pnrr-futura/",
+      "city": "Mercato San Severino",
+      "active": true
+    },
+    {
+      "id": "primo_circolo_mercato_pon",
+      "name": "1° Circolo Mercato S. Severino - PON",
+      "base_url": "https://www.1circolomercatosanseverino.edu.it",
+      "pnrr_url": "https://www.1circolomercatosanseverino.edu.it/pon",
+      "city": "Mercato San Severino",
+      "active": true
+    },
+    {
+      "id": "iti_pacinotti_pnrr",
+      "name": "ITI Pacinotti - PNRR",
+      "base_url": "https://www.itipacinotti.edu.it",
+      "pnrr_url": "https://www.itipacinotti.edu.it/pnrr-futura/",
+      "city": "Scafati",
+      "active": true
+    },
+    {
+      "id": "iti_pacinotti_pon",
+      "name": "ITI Pacinotti - PON",
+      "base_url": "https://www.itipacinotti.edu.it",
+      "pnrr_url": "https://www.itipacinotti.edu.it/pon",
+      "city": "Scafati",
+      "active": true
+    },
+    {
+      "id": "iis_parmenide_tutoraggio",
+      "name": "IIS Parmenide - Tutoraggio/Divari",
+      "base_url": "https://istitutoistruzionesuperioreparmenide.edu.it",
+      "pnrr_url": "https://istitutoistruzionesuperioreparmenide.edu.it/tipologia-documento/Interventi-di-tutoraggio-e-formazione-per-la-riduzione-dei-divari-negli-apprendimenti/",
+      "city": "Vallo della Lucania",
+      "active": true
+    },
+    {
+      "id": "iis_parmenide_classroom",
+      "name": "IIS Parmenide - Next Gen Classroom",
+      "base_url": "https://istitutoistruzionesuperioreparmenide.edu.it",
+      "pnrr_url": "https://istitutoistruzionesuperioreparmenide.edu.it/tipologia-documento/pnrr-next-generation-classroom-ambienti-di-apprendimento-innovativi/",
+      "city": "Vallo della Lucania",
+      "active": true
+    },
+    {
+      "id": "iis_parmenide_eu_citizen",
+      "name": "IIS Parmenide - Next Generation EU Citizen",
+      "base_url": "https://istitutoistruzionesuperioreparmenide.edu.it",
+      "pnrr_url": "https://istitutoistruzionesuperioreparmenide.edu.it/tipologia-documento/pnrr-next-generation-eu-esperienza-del-cittadino-nei-servizi-pubblici/",
+      "city": "Vallo della Lucania",
+      "active": true
+    },
+    {
+      "id": "iis_parmenide_pcto_stem",
+      "name": "IIS Parmenide - PCTO STEM",
+      "base_url": "https://istitutoistruzionesuperioreparmenide.edu.it",
+      "pnrr_url": "https://istitutoistruzionesuperioreparmenide.edu.it/tipologia-documento/pcto-sulle-discipline-stem/",
+      "city": "Vallo della Lucania",
+      "active": true
+    },
+    {
+      "id": "iis_parmenide_labs",
+      "name": "IIS Parmenide - Next Gen Labs",
+      "base_url": "https://istitutoistruzionesuperioreparmenide.edu.it",
+      "pnrr_url": "https://istitutoistruzionesuperioreparmenide.edu.it/tipologia-documento/pnrr-next-generation-labs-metodologie-innovative-per-i-laboratori-didattici-professionali-e-digitali/",
+      "city": "Vallo della Lucania",
+      "active": true
+    },
+    {
+      "id": "iis_parmenide_dispersione",
+      "name": "IIS Parmenide - Dispersione",
+      "base_url": "https://istitutoistruzionesuperioreparmenide.edu.it",
+      "pnrr_url": "https://istitutoistruzionesuperioreparmenide.edu.it/tipologia-documento/pnrr-azioni-di-prevenzione-e-contrasto-alla-dispersione-scolastica-d-m-170-2022/",
+      "city": "Vallo della Lucania",
+      "active": true
+    },
+    {
+      "id": "iis_parmenide_stem_competenze",
+      "name": "IIS Parmenide - Competenze STEM",
+      "base_url": "https://istitutoistruzionesuperioreparmenide.edu.it",
+      "pnrr_url": "https://istitutoistruzionesuperioreparmenide.edu.it/tipologia-documento/pnrr-competenze-stem-e-multilinguistiche-nelle-scuole-statali-d-m-65-2023/",
+      "city": "Vallo della Lucania",
+      "active": true
+    },
+    {
+      "id": "iis_parmenide_formazione_digitale",
+      "name": "IIS Parmenide - Formazione Digitale",
+      "base_url": "https://istitutoistruzionesuperioreparmenide.edu.it",
+      "pnrr_url": "https://istitutoistruzionesuperioreparmenide.edu.it/tipologia-documento/pnrr-formazione-del-personale-per-la-transiz-digitale-nelle-scuole-statali-d-m-66-2023/",
+      "city": "Vallo della Lucania",
+      "active": true
+    },
+    {
+      "id": "ic_serre_castelcivita_news",
+      "name": "IC Serre Castelcivita - Notizie",
+      "base_url": "https://www.istitutocomprensivoserre-castelcivita.edu.it",
+      "pnrr_url": "https://www.istitutocomprensivoserre-castelcivita.edu.it/categoria/le-notizie/",
+      "city": "Serre",
+      "active": true
     }
   ]
 }

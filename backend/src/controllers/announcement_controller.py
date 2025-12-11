@@ -36,6 +36,7 @@ def index():
     sorters = {
         "title": lambda a: a.get("title", "").lower(),
         "school": lambda a: a.get("school_name", "").lower(),
+        "city": lambda a: a.get("city", "").lower(),
         "category": lambda a: a.get("category", "").lower(),
         "date": lambda a: a.get("date", date.min),
         "status": lambda a: a.get("status", "").lower(),
@@ -60,7 +61,41 @@ def announcement_detail(ann_id: int):
     announcement = service.get_announcement_by_id(ann_id)
     if not announcement:
         abort(404)
-    return render_template("detail.html", announcement=announcement)
+
+    # Build navigation and derived metadata
+    announcements = service.get_all_announcements()
+    # Sort by date desc, fallback to id to keep stable order
+    announcements.sort(key=lambda a: (a.get("date") or date.min, a.get("id") or 0), reverse=True)
+    ids = [a.get("id") for a in announcements]
+    try:
+        idx = ids.index(ann_id)
+    except ValueError:
+        idx = -1
+
+    prev_ann = announcements[idx - 1] if idx > 0 else None
+    next_ann = announcements[idx + 1] if 0 <= idx < len(announcements) - 1 else None
+
+    # Get attachments from announcement data
+    attachments = announcement.get("attachments", [])
+
+    # Also check if the main link is a PDF (backward compatibility)
+    link = announcement.get("link", "")
+    if isinstance(link, str) and link.lower().endswith(".pdf"):
+        # Check if it's not already in attachments
+        if not any(att.get("url") == link for att in attachments):
+            attachments.insert(0, {
+                "url": link,
+                "label": "Documento PDF principale",
+                "type": "pdf"
+            })
+
+    return render_template(
+        "detail.html",
+        announcement=announcement,
+        prev_ann=prev_ann,
+        next_ann=next_ann,
+        attachments=attachments,
+    )
 
 
 @announcement_bp.route("/api/fetch", methods=["POST"])

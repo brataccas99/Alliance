@@ -2,11 +2,20 @@
 import logging
 import os
 from pathlib import Path
+from typing import Optional
 
 from flask import Flask
 
 from .config import get_config
 from .controllers import announcement_bp
+from .services import AnnouncementService
+
+try:
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from apscheduler.triggers.cron import CronTrigger
+except Exception:  # pragma: no cover - optional dependency at runtime
+    BackgroundScheduler = None  # type: ignore
+    CronTrigger = None  # type: ignore
 
 
 def create_app(config_name: str = "default") -> Flask:
@@ -47,17 +56,50 @@ def create_app(config_name: str = "default") -> Flask:
     return app
 
 
+def _start_scheduler(service: AnnouncementService) -> Optional[BackgroundScheduler]:
+    """Start a daily fetch scheduler if APScheduler is available."""
+    if not BackgroundScheduler or not CronTrigger:
+        logging.warning("APScheduler not installed; background fetch scheduler disabled.")
+        return None
+
+    scheduler = BackgroundScheduler(daemon=True)
+
+    def job():
+        try:
+            count = service.fetch_and_save()
+            logging.info("Scheduled fetch completed: %s announcements", count)
+        except Exception as exc:  # noqa: BLE001
+            logging.error("Scheduled fetch failed: %s", exc)
+
+    # Run daily at 02:00 UTC
+    scheduler.add_job(job, CronTrigger(hour=2, minute=0))
+    scheduler.start()
+    logging.info("Background scheduler started (daily fetch at 02:00 UTC)")
+    return scheduler
+
+
 def main() -> None:
     """Run the Flask application."""
     config_name = os.getenv("FLASK_ENV", "development")
     app = create_app(config_name)
     config = get_config(config_name)
 
+    # Avoid double-start under the Werkzeug reloader
+    is_reloader = os.getenv("WERKZEUG_RUN_MAIN") == "true"
+    scheduler_enabled = os.getenv("SCHEDULER_ENABLED", "true").lower() in ("1", "true", "yes")
+    scheduler = None
+    if scheduler_enabled and not is_reloader:
+        service = AnnouncementService()
+        scheduler = _start_scheduler(service)
+
     app.run(
         debug=config.DEBUG,
         host=config.HOST,
         port=config.PORT,
     )
+
+    if scheduler:
+        scheduler.shutdown(wait=False)
 
 
 if __name__ == "__main__":

@@ -50,6 +50,11 @@ Thumbs.db
 
 # Data files (keep config, ignore data)
 backend/data/announcements.json
+backend/data/*.json
+
+# Playwright user data / profiles
+.playwright-profile/
+.playwright*
 
 # Temporary files
 *.tmp
