@@ -646,11 +646,53 @@ function initDashboard(): void {
   // Export to CSV functionality
   const exportBtn = document.getElementById("exportBtn");
   const fetchBtn = document.getElementById("fetchBtn");
+  const fetchStatus = document.getElementById("fetchStatus");
+  const fetchProgressBar = document.getElementById("fetchProgressBar") as HTMLElement | null;
+  const fetchProgressText = document.getElementById("fetchProgressText");
+  const fetchCurrentSchool = document.getElementById("fetchCurrentSchool");
+  let fetchPoll: number | null = null;
+
+  const startFetchPolling = () => {
+    if (!fetchStatus) return;
+    fetchStatus.style.display = "block";
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/fetch/status");
+        const data = await res.json();
+        const total = Number(data.total || 0);
+        const current = Number(data.current || 0);
+        const school = data.school || "";
+        const status = data.status || "idle";
+        const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+        if (fetchProgressBar) {
+          fetchProgressBar.style.width = `${pct}%`;
+        }
+        if (fetchProgressText) {
+          fetchProgressText.textContent = total > 0 ? `${current}/${total} (${pct}%)` : "";
+        }
+        if (fetchCurrentSchool) {
+          fetchCurrentSchool.textContent = school;
+        }
+        if (status === "idle" || status === "done") {
+          if (fetchStatus) fetchStatus.style.display = "none";
+          if (fetchPoll !== null) {
+            clearInterval(fetchPoll);
+            fetchPoll = null;
+          }
+        }
+      } catch (e) {
+        console.error("Polling fetch status failed", e);
+      }
+    };
+    poll();
+    fetchPoll = window.setInterval(poll, 2000);
+  };
 
   if (fetchBtn) {
     fetchBtn.addEventListener("click", async () => {
       fetchBtn.setAttribute("disabled", "true");
       fetchBtn.textContent = "Aggiorno...";
+      startFetchPolling();
       try {
         await fetch("/api/fetch", { method: "POST" });
         location.reload();
@@ -660,6 +702,10 @@ function initDashboard(): void {
       } finally {
         fetchBtn.removeAttribute("disabled");
         fetchBtn.textContent = "Aggiorna annunci";
+        if (fetchPoll !== null) {
+          clearInterval(fetchPoll);
+          fetchPoll = null;
+        }
       }
     });
   }

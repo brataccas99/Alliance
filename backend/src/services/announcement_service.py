@@ -43,6 +43,12 @@ class AnnouncementService:
         self._memory_cache: Dict[str, object] = {"data": None, "timestamp": None}
         self.session = requests.Session()
         self.session.headers.update(self._BASE_HEADERS)
+        self._progress: Dict[str, object] = {
+            "status": "idle",
+            "total": 0,
+            "current": 0,
+            "school": None,
+        }
         self._last_request_time = 0.0
         self._request_count = 0
 
@@ -443,6 +449,19 @@ class AnnouncementService:
             logging.error(f"Failed to scrape from {school.name}: {exc}")
             return []
 
+    def get_progress(self) -> Dict[str, object]:
+        """Return current fetch progress."""
+        return self._progress
+
+    def _set_progress(self, status: str, total: int, current: int, school: Optional[str]) -> None:
+        """Update progress state."""
+        self._progress = {
+            "status": status,
+            "total": total,
+            "current": current,
+            "school": school,
+        }
+
     def fetch_and_save(self) -> int:
         """Fetch announcements from all schools and save to JSON.
 
@@ -450,9 +469,11 @@ class AnnouncementService:
             Number of announcements fetched.
         """
         schools = get_active_schools()
+        self._set_progress("running", len(schools), 0, None)
         scraped_items: List[Dict] = []
 
-        for school in schools:
+        for idx, school in enumerate(schools, start=1):
+            self._set_progress("running", len(schools), idx - 1, school.name)
             school_items = self._scrape_school_announcements(school)
             scraped_items.extend(school_items)
 
@@ -514,6 +535,7 @@ class AnnouncementService:
             "timestamp": datetime.utcnow()
         }
 
+        self._set_progress("idle", 0, 0, None)
         logging.info(f"Saved {len(pruned)} total announcements from {len(schools)} schools (merged, pruned)")
         return len(pruned)
 

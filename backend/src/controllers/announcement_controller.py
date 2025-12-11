@@ -116,6 +116,13 @@ def fetch_announcements():
         }), 500
 
 
+@announcement_bp.route("/api/fetch/status")
+def fetch_status():
+    """API endpoint to get current fetch progress."""
+    progress = service.get_progress()
+    return jsonify(progress)
+
+
 @announcement_bp.route("/api/announcements")
 def api_get_announcements():
     """API endpoint to get all announcements as JSON."""
