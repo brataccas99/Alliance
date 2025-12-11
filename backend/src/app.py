@@ -87,9 +87,19 @@ def main() -> None:
     # Avoid double-start under the Werkzeug reloader
     is_reloader = os.getenv("WERKZEUG_RUN_MAIN") == "true"
     scheduler_enabled = os.getenv("SCHEDULER_ENABLED", "true").lower() in ("1", "true", "yes")
+    initial_fetch = os.getenv("INITIAL_FETCH", "true").lower() in ("1", "true", "yes")
     scheduler = None
+    service = AnnouncementService()
+
+    # Run initial fetch once on startup (non-reloader) if enabled
+    if initial_fetch and not is_reloader:
+        try:
+            count = service.fetch_and_save()
+            logging.info("Initial fetch completed at startup: %s announcements", count)
+        except Exception as exc:  # noqa: BLE001
+            logging.error("Initial fetch failed at startup: %s", exc)
+
     if scheduler_enabled and not is_reloader:
-        service = AnnouncementService()
         scheduler = _start_scheduler(service)
 
     app.run(
