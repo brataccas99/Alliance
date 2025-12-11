@@ -1,0 +1,33 @@
+# Docker Compose override for development
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - FLASK_ENV=development
+      - DEBUG=True
+    volumes:
+      # Mount source code for hot reload
+      - ./backend/src:/app/src:ro
+      # Override CMD for development
+    command: python main.py
+    ports:
+      - "5000:5000"
+
+  mongodb:
+    ports:
+      - "27017:27017"
+    volumes:
+      # Use named volume for persistence
+      - mongodb_dev_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: dev
+      MONGO_INITDB_ROOT_PASSWORD: devpassword
+
+volumes:
+  mongodb_dev_data:

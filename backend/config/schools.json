@@ -1,0 +1,12 @@
+{
+  "schools": [
+    {
+      "id": "liceo_alfano1",
+      "name": "Liceo Alfano I",
+      "base_url": "https://www.liceoalfano1.edu.it",
+      "pnrr_url": "https://www.liceoalfano1.edu.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    }
+  ]
+}

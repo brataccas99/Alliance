@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PNRR Futura Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
+</head>
+<body>
+    <div class="bg-accent"></div>
+    <main class="page">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">PNRR Futura � Annunci</p>
+                <h1>Avvisi scuola, ordinati e ricercabili</h1>
+                <p class="lede">Un cruscotto unico per sfogliare gli ultimi bandi, graduatorie e convocazioni. Cerca, ordina e apri il dettaglio con un clic.</p>
+            </div>
+            <div class="meta-card">
+                <p class="label">Scuole monitorate</p>
+                <p class="value">Raccolta dati da tutte le scuole attive di Salerno con programmi PNRR Futura</p>
+            </div>
+        </header>
+
+        <section class="controls">
+            <div class="search">
+                <label for="searchInput">Cerca annuncio</label>
+                <div class="search-box">
+                    <span class="search-icon">?</span>
+                    <input id="searchInput" type="search" placeholder="Titolo, parola chiave o tag" autocomplete="off">
+                </div>
+                <p class="hint">Il filtro � immediato e funziona anche su tag e categoria.</p>
+            </div>
+            <div class="filter-chips" aria-label="Filtri rapidi">
+                <button class="chip active" data-filter="none">Tutti</button>
+                <button class="chip" data-filter="highlight">Solo evidenziati</button>
+                <button class="chip" data-filter="open">Stato: aperti</button>
+            </div>
+            <div class="result-meta">
+                <span id="resultsCount">{{ announcements|length }} record</span>
+            </div>
+        </section>
+
+        <section class="table-card">
+            <div class="table-head">
+                <div>
+                    <p class="label">Ultimi aggiornamenti</p>
+                    <h2>Elenco annunci</h2>
+                </div>
+                <div class="legend">
+                    <span class="pill pill-highlight">Evidenziato</span>
+                    <span class="pill pill-open">Aperto</span>
+                </div>
+            </div>
+
+            <table id="annTable">
+                <thead>
+                    <tr>
+                        <th data-sort="title">Annuncio</th>
+                        <th data-sort="school">Scuola</th>
+                        <th data-sort="category">Categoria</th>
+                        <th data-sort="date" class="numeric">Data</th>
+                        <th data-sort="status">Stato</th>
+                        <th>Azioni</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ann in announcements %}
+                    <tr
+                        class="{% if ann.highlight %}row-highlight{% endif %}"
+                        data-date="{{ ann.date.isoformat() if ann.date else '' }}"
+                        data-title="{{ ann.title }}"
+                        data-school="{{ ann.school_name }}"
+                        data-category="{{ ann.category }}"
+                        data-status="{{ ann.status }}"
+                        data-highlight="{{ 'true' if ann.highlight else 'false' }}"
+                        data-search="{{ ann.title }} {{ ann.summary }} {{ ann.school_name }} {{ ann.category }} {{ ', '.join(ann.tags) }}"
+                    >
+                        <td>
+                            <div class="title-row">
+                                <span class="badge">#{{ ann.id }}</span>
+                                <div>
+                                    <p class="title">{{ ann.title }}</p>
+                                    <p class="subtitle">{{ ann.summary }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="pill">{{ ann.school_name }}</span>
+                        </td>
+                        <td>
+                            <span class="pill">{{ ann.category }}</span>
+                        </td>
+                        <td class="numeric">
+                            {{ ann.date.strftime('%d %b %Y') if ann.date else 's.n.' }}
+                        </td>
+                        <td>
+                            <span class="pill {{ 'pill-open' if ann.status == 'Open' else '' }}">{{ ann.status }}</span>
+                        </td>
+                        <td>
+                            <a class="ghost" href="{{ url_for('announcement_detail', ann_id=ann.id) }}">Apri dettagli</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if announcements|length == 0 %}
+                <div class="empty">Nessun annuncio trovato.</div>
+            {% endif %}
+        </section>
+    </main>
+</body>
+</html>

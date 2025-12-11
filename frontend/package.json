@@ -1,0 +1,25 @@
+{
+  "name": "alliance-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for Alliance PNRR Futura Dashboard",
+  "main": "dist/js/main.js",
+  "scripts": {
+    "build": "tsc && npm run copy-assets",
+    "watch": "tsc --watch",
+    "copy-assets": "npm run copy-css && npm run copy-templates",
+    "copy-css": "node -e \"require('fs').cpSync('src/css', 'dist/css', {recursive: true})\"",
+    "copy-templates": "node -e \"require('fs').cpSync('src/templates', 'dist/templates', {recursive: true})\"",
+    "clean": "node -e \"require('fs').rmSync('dist', {recursive: true, force: true})\"",
+    "dev": "npm run clean && npm run build && npm run watch"
+  },
+  "keywords": [
+    "typescript",
+    "frontend"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,68 @@
+ALLIANCE PNRR FUTURA DASHBOARD - USAGE GUIDE
+=============================================
+
+QUICK START:
+-----------
+1. Add schools to:     backend/config/schools.json
+2. Fetch announcements: make fetch  (or: cd backend && python fetch.py)
+3. Build frontend:      make frontend-build (builds TS + copies to backend)
+   OR just copy:        ./copy-frontend.sh (Windows: copy-frontend.bat)
+4. Start server:        make backend-dev  (or: cd backend && python main.py)
+5. Open browser:        http://localhost:5000
+
+DOCKER:
+   make up              (auto-copies frontend, starts all services)
+   Open: http://localhost:5000
+
+ADDING SCHOOLS:
+--------------
+Edit backend/config/schools.json:
+
+{
+  "schools": [
+    {
+      "id": "unique_school_id",
+      "name": "School Full Name",
+      "base_url": "https://www.school.edu.it",
+      "pnrr_url": "https://www.school.edu.it/pnrr-futura/",
+      "city": "Salerno",
+      "active": true
+    }
+  ]
+}
+
+FETCHING DATA:
+-------------
+Option 1: Command line
+  make fetch
+
+Option 2: API endpoint
+  curl -X POST http://localhost:5000/api/fetch
+
+Data is saved to: backend/data/announcements.json
+
+API ENDPOINTS:
+-------------
+POST /api/fetch                         Fetch from all schools
+GET  /api/announcements                 Get all announcements
+GET  /api/announcements?school_id=X     Filter by school
+
+DEVELOPMENT:
+-----------
+Backend:  make backend-dev
+Frontend: cd frontend && npm run dev
+
+DOCKER:
+------
+Build:  make build
+Start:  make up
+Stop:   make down
+Logs:   make logs
+
+FILES:
+-----
+backend/config/schools.json       → School URLs (version control this)
+backend/data/announcements.json   → Fetched data (git ignored)
+backend/fetch.py                  → Fetcher script
+frontend/src/                     → Frontend source
+frontend/dist/                    → Built frontend (git ignored)

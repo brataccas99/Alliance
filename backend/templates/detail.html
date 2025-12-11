@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ announcement.title }} • PNRR Futura</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body class="detail-page">
+    <div class="bg-accent"></div>
+    <main class="page detail">
+        <a class="back" href="{{ url_for('index') }}">? Torna all'elenco</a>
+
+        <header class="detail-hero">
+            <div>
+                <p class="eyebrow">{{ announcement.category }} • {{ announcement.source }}</p>
+                <h1>{{ announcement.title }}</h1>
+                <p class="lede">{{ announcement.summary }}</p>
+                <div class="meta-row">
+                    <span class="pill {{ 'pill-open' if announcement.status == 'Open' else '' }}">{{ announcement.status }}</span>
+                    <span class="pill">{{ announcement.date.strftime('%d %b %Y') if announcement.date else 's.n.' }}</span>
+                    {% if announcement.highlight %}<span class="pill pill-highlight">Evidenziato</span>{% endif %}
+                </div>
+            </div>
+            <div class="meta-card">
+                <p class="label">Fonte originale</p>
+                <p class="value"><a class="ghost" href="{{ announcement.link }}" target="_blank" rel="noreferrer noopener">Apri su sito scuola</a></p>
+            </div>
+        </header>
+
+        <section class="detail-body">
+            <article>
+                {% if announcement.body %}
+                    {% for paragraph in announcement.body.split('\n\n') %}
+                        <p>{{ paragraph }}</p>
+                    {% endfor %}
+                {% else %}
+                    <p>Dettaglio non disponibile dal feed. Apri la fonte originale per leggere tutto.</p>
+                {% endif %}
+            </article>
+        </section>
+    </main>
+</body>
+</html>
