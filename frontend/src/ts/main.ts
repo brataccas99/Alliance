@@ -2,6 +2,9 @@
  * Main TypeScript file for Alliance PNRR Futura Dashboard
  */
 
+console.log("🟢 main.js LOADED - Script is executing!");
+console.log("🕐 Timestamp:", new Date().toISOString());
+
 interface AnnouncementRow extends HTMLTableRowElement {
   dataset: DOMStringMap & {
     id: string;
@@ -13,6 +16,8 @@ interface AnnouncementRow extends HTMLTableRowElement {
     category: string;
     status: string;
     highlight: string;
+    summary: string;
+    year: string;
     search: string;
     sort?: string;
     filter?: string;
@@ -21,7 +26,7 @@ interface AnnouncementRow extends HTMLTableRowElement {
 
 type SortKey = "title" | "school" | "city" | "category" | "date" | "status";
 type SortDirection = "asc" | "desc";
-type FilterType = "none" | "highlight" | "open" | "pnrr" | "pon";
+type FilterType = "none" | "highlight" | "open" | "pnrr" | "pon" | "recent";
 
 interface SortState {
   key: SortKey;
@@ -55,18 +60,27 @@ const RECENT_STORAGE_KEY = "alliance_recent_viewed";
 function loadStates(): Record<string, PersonalState> {
   try {
     const raw = localStorage.getItem(STATE_STORAGE_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw) as Record<string, PersonalState>;
-  } catch {
+    console.log(`🔑 localStorage.getItem("${STATE_STORAGE_KEY}"):`, raw);
+    if (!raw) {
+      console.log("⚠️ No saved states found in localStorage");
+      return {};
+    }
+    const parsed = JSON.parse(raw) as Record<string, PersonalState>;
+    console.log("✅ Parsed states:", parsed);
+    return parsed;
+  } catch (e) {
+    console.error("❌ Error loading states:", e);
     return {};
   }
 }
 
 function saveStates(states: Record<string, PersonalState>): void {
   try {
-    localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(states));
-  } catch {
-    /* ignore */
+    const json = JSON.stringify(states);
+    localStorage.setItem(STATE_STORAGE_KEY, json);
+    console.log(`💾 Saved states to localStorage:`, states);
+  } catch (e) {
+    console.error("❌ Error saving states:", e);
   }
 }
 
@@ -132,6 +146,7 @@ function matchesFilter(
   row: AnnouncementRow,
   activeFilter: FilterType,
   schoolFilter: string,
+  yearFilter: string,
   dateFrom: string,
   dateTo: string
 ): boolean {
@@ -142,13 +157,40 @@ function matchesFilter(
     return false;
   }
   const categoryVal = row.dataset.category?.toLowerCase() || "";
-  if (activeFilter === "pnrr" && !categoryVal.includes("pnrr")) {
-    return false;
+  const summaryVal = row.dataset.summary?.toLowerCase() || "";
+  const titleVal = row.dataset.title?.toLowerCase() || "";
+
+  if (activeFilter === "pon") {
+    const hasPON = categoryVal.includes("pon") ||
+                   summaryVal.includes("pon") ||
+                   titleVal.includes("pon") ||
+                   summaryVal.includes("programma operativo nazionale");
+    if (!hasPON) return false;
   }
-  if (activeFilter === "pon" && !categoryVal.includes("pon")) {
-    return false;
+
+  if (activeFilter === "pnrr") {
+    const hasPNRR = categoryVal.includes("pnrr") ||
+                    summaryVal.includes("pnrr") ||
+                    titleVal.includes("pnrr");
+    const hasPON = categoryVal.includes("pon") ||
+                   summaryVal.includes("pon") ||
+                   titleVal.includes("pon") ||
+                   summaryVal.includes("programma operativo nazionale");
+    // Only show PNRR announcements that are NOT PON
+    if (!hasPNRR || hasPON) return false;
+  }
+  if (activeFilter === "recent") {
+    const rowDate = parseDate(row.dataset.date || "");
+    if (rowDate === 0) return false; // Skip if no valid date
+    const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+    if (rowDate < sevenDaysAgo) return false;
   }
   if (schoolFilter && row.dataset.schoolId !== schoolFilter) {
+    return false;
+  }
+
+  // Year filtering
+  if (yearFilter && row.dataset.year !== yearFilter) {
     return false;
   }
 
@@ -188,6 +230,7 @@ function updateVisibility(
   rows: AnnouncementRow[],
   activeFilter: FilterType,
   schoolFilter: string,
+  yearFilter: string,
   searchTerm: string,
   resultCounter: HTMLElement,
   dateFrom: string = "",
@@ -195,7 +238,7 @@ function updateVisibility(
 ): void {
   let visible = 0;
   rows.forEach((row) => {
-    const show = matchesFilter(row, activeFilter, schoolFilter, dateFrom, dateTo) && matchesSearch(row, searchTerm);
+    const show = matchesFilter(row, activeFilter, schoolFilter, yearFilter, dateFrom, dateTo) && matchesSearch(row, searchTerm);
     row.style.display = show ? "table-row" : "none";
     if (show) visible += 1;
   });
@@ -213,6 +256,7 @@ function sortRows(
   currentSort: SortState,
   activeFilter: FilterType,
   schoolFilter: string,
+  yearFilter: string,
   searchTerm: string,
   resultCounter: HTMLElement,
   dateFrom: string = "",
@@ -242,7 +286,7 @@ function sortRows(
     h.classList.toggle("active", sortKey === key);
   });
 
-  updateVisibility(rows, activeFilter, schoolFilter, searchTerm, resultCounter, dateFrom, dateTo);
+  updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchTerm, resultCounter, dateFrom, dateTo);
 
   return newSort;
 }
@@ -251,28 +295,48 @@ function sortRows(
  * Initialize the dashboard
  */
 function initDashboard(): void {
+  console.log("🚀 initDashboard called");
+
   const table = document.getElementById("annTable") as HTMLTableElement | null;
-  if (!table) return;
+  if (!table) {
+    console.error("❌ Table not found!");
+    return;
+  }
 
   const tbody = table.querySelector("tbody") as HTMLTableSectionElement | null;
-  if (!tbody) return;
+  if (!tbody) {
+    console.error("❌ Tbody not found!");
+    return;
+  }
 
   const headers = table.querySelectorAll<HTMLTableCellElement>("th[data-sort]");
   const searchInput = document.getElementById("searchInput") as HTMLInputElement | null;
   const schoolSelect = document.getElementById("schoolFilter") as HTMLSelectElement | null;
+  const yearSelect = document.getElementById("yearFilter") as HTMLSelectElement | null;
   const resultCounter = document.getElementById("resultsCount") as HTMLElement | null;
   const chipButtons = Array.from(
     document.querySelectorAll<HTMLButtonElement>(".chip")
   );
+
+  console.log("📦 Loading states from localStorage...");
   const personalStates = loadStates();
+  console.log("✅ Loaded states:", personalStates);
+  console.log("📊 Number of states:", Object.keys(personalStates).length);
 
-  if (!searchInput || !resultCounter) return;
+  const persistState = (annId: string, newState: PersonalState) => {
+    personalStates[annId] = newState;
+    saveStates(personalStates);
+  };
 
+  // Load rows BEFORE checking for optional elements
   let rows = Array.from(
     tbody.querySelectorAll<AnnouncementRow>("tr")
   ) as AnnouncementRow[];
+  console.log(`📋 Found ${rows.length} rows in table`);
+
   let activeFilter: FilterType = "none";
   let schoolFilter = "";
+  let yearFilter = "";
   let currentSort: SortState = { key: "date", direction: "desc" };
 
   // Date range filter elements
@@ -296,6 +360,7 @@ function initDashboard(): void {
     saveStates(personalStates);
     const pill = row.querySelector<HTMLElement>(".state-pill");
     const select = row.querySelector<HTMLSelectElement>(".state-select");
+    console.log(`applyState for ${annId}: newState="${newState}", pill found:`, !!pill, ", select found:", !!select);
     if (select) {
       select.value = newState;
     }
@@ -312,9 +377,98 @@ function initDashboard(): void {
         };
         pill.textContent = labels[newState];
         pill.style.display = "inline-block";
+        console.log(`Set pill for ${annId}: "${labels[newState]}", display: inline-block`);
       }
+    } else {
+      console.warn(`No pill found for announcement ${annId}`);
     }
   };
+
+  // ⭐ CRITICAL: Initialize personal state UI per row IMMEDIATELY
+  // This must happen early so states persist even if other elements are missing
+  console.log("🔄 Starting row initialization...");
+  console.log("📦 States to apply:", personalStates);
+  let rowsProcessed = 0;
+  rows.forEach((row) => {
+    const annId = row.dataset.id || "";
+    const select = row.querySelector<HTMLSelectElement>(".state-select");
+    const link = row.querySelector<HTMLAnchorElement>(".detail-link");
+    const currentState = personalStates[annId] || "none";
+    console.log(`🔹 Row ${annId}: applying state "${currentState}"`);
+    applyState(row, currentState);
+    rowsProcessed++;
+
+    if (select) {
+      select.addEventListener("change", () => {
+        applyState(row, select.value as PersonalState);
+      });
+    }
+
+    if (link) {
+      link.addEventListener("click", () => {
+        const title = row.dataset.title || "";
+        const school = row.dataset.school || "";
+        markAsReadAndTrack(annId, title, school);
+      });
+    }
+  });
+  console.log(`✅ Finished processing ${rowsProcessed} rows`);
+
+  // Track reads and recents when opening from card view
+  document.querySelectorAll<HTMLAnchorElement>(".card-link").forEach((cardLink) => {
+    cardLink.addEventListener("click", () => {
+      const card = cardLink.closest<HTMLElement>(".announcement-card");
+      const annId = card?.dataset.id;
+      if (!annId) return;
+      const title = card.dataset.title || "";
+      const school = card.dataset.school || "";
+      markAsReadAndTrack(annId, title, school);
+    });
+  });
+
+  // ⭐ Render Recently Viewed - must happen before early return
+  const renderRecentlyViewed = () => {
+    if (!recentlyViewedList) return;
+    const recent = loadRecentlyViewed();
+
+    if (recent.length === 0) {
+      recentlyViewedList.innerHTML = '<p class="empty-message">Nessun annuncio visualizzato di recente.</p>';
+      return;
+    }
+
+    recentlyViewedList.innerHTML = recent.map((item) => `
+      <a href="/announcement/${item.id}" class="recent-item">
+        <div class="recent-info">
+          <strong class="recent-title">${item.title}</strong>
+          <span class="recent-school">${item.school}</span>
+        </div>
+        <span class="recent-time">${formatTimeAgo(item.viewedAt)}</span>
+      </a>
+    `).join("");
+  };
+
+  const formatTimeAgo = (isoString: string): string => {
+    const now = new Date().getTime();
+    const then = new Date(isoString).getTime();
+    const diffMs = now - then;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Oggi";
+    if (diffDays === 1) return "Ieri";
+    if (diffDays < 7) return `${diffDays}g fa`;
+    return new Date(isoString).toLocaleDateString();
+  };
+
+  // Call renderRecentlyViewed immediately
+  console.log("🕐 Rendering recently viewed...");
+  renderRecentlyViewed();
+
+  // Early validation for search/filter features (states are already applied above!)
+  if (!searchInput || !resultCounter) {
+    console.warn("⚠️ searchInput or resultCounter not found - search/filter features disabled");
+    console.log("✅ State persistence is working! Just can't use search/filters.");
+    console.log("✅ Recently viewed is rendered!");
+    return;
+  }
 
   // Render saved presets
   const renderPresets = () => {
@@ -389,7 +543,7 @@ function initDashboard(): void {
       chip.classList.toggle("active", chip.dataset.filter === preset.activeFilter);
     });
 
-    updateVisibility(rows, activeFilter, schoolFilter, preset.searchTerm, resultCounter, dateFrom, dateTo);
+    updateVisibility(rows, activeFilter, schoolFilter, yearFilter, preset.searchTerm, resultCounter, dateFrom, dateTo);
   };
 
   const deletePreset = (presetId: string) => {
@@ -399,67 +553,28 @@ function initDashboard(): void {
     renderPresets();
   };
 
-  // Render recently viewed
-  const renderRecentlyViewed = () => {
-    if (!recentlyViewedList) return;
-    const recent = loadRecentlyViewed();
+  const markAsReadAndTrack = (annId: string, title: string, school: string) => {
+    console.log(`📖 markAsReadAndTrack called for ${annId}`);
+    const currentState = personalStates[annId];
+    console.log(`Current state: ${currentState}`);
 
-    if (recent.length === 0) {
-      recentlyViewedList.innerHTML = '<p class="empty-message">Nessun annuncio visualizzato di recente.</p>';
-      return;
-    }
-
-    recentlyViewedList.innerHTML = recent.map((item) => `
-      <a href="/announcement/${item.id}" class="recent-item">
-        <div class="recent-info">
-          <strong class="recent-title">${item.title}</strong>
-          <span class="recent-school">${item.school}</span>
-        </div>
-        <span class="recent-time">${formatTimeAgo(item.viewedAt)}</span>
-      </a>
-    `).join("");
-  };
-
-  const formatTimeAgo = (isoString: string): string => {
-    const now = new Date().getTime();
-    const then = new Date(isoString).getTime();
-    const diffMs = now - then;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return "Ora";
-    if (diffMins < 60) return `${diffMins}m fa`;
-    if (diffHours < 24) return `${diffHours}h fa`;
-    if (diffDays < 7) return `${diffDays}g fa`;
-    return new Date(isoString).toLocaleDateString();
-  };
-
-  // Initialize personal state UI per row
-  rows.forEach((row) => {
-    const annId = row.dataset.id || "";
-    const select = row.querySelector<HTMLSelectElement>(".state-select");
-    const link = row.querySelector<HTMLAnchorElement>(".detail-link");
-    const currentState = personalStates[annId] || "none";
-    applyState(row, currentState);
-
-    if (select) {
-      select.addEventListener("change", () => {
-        applyState(row, select.value as PersonalState);
-      });
-    }
-
-    if (link) {
-      link.addEventListener("click", () => {
+    // Only mark as "read" if there's no state or it's "none"
+    // Don't overwrite "applied" or "skip" states
+    if (!currentState || currentState === "none") {
+      const row = tbody.querySelector<AnnouncementRow>(`tr[data-id="${annId}"]`);
+      if (row) {
         applyState(row, "read");
-        // Track in recently viewed
-        const title = row.dataset.title || "";
-        const school = row.dataset.school || "";
-        addRecentlyViewed(annId, title, school);
-        renderRecentlyViewed();
-      });
+      } else {
+        persistState(annId, "read");
+      }
+      console.log(`✅ Marked ${annId} as read`);
+    } else {
+      console.log(`ℹ️ Preserving existing state "${currentState}" for ${annId}`);
     }
-  });
+
+    addRecentlyViewed(annId, title, school);
+    renderRecentlyViewed();
+  };
 
   // Header click handlers for sorting
   headers.forEach((header) => {
@@ -474,6 +589,7 @@ function initDashboard(): void {
           currentSort,
           activeFilter,
           schoolFilter,
+          yearFilter,
           searchInput.value.trim().toLowerCase(),
           resultCounter,
           dateFrom,
@@ -493,6 +609,7 @@ function initDashboard(): void {
         rows,
         activeFilter,
         schoolFilter,
+        yearFilter,
         searchInput.value.trim().toLowerCase(),
         resultCounter,
         dateFrom,
@@ -509,6 +626,24 @@ function initDashboard(): void {
         rows,
         activeFilter,
         schoolFilter,
+        yearFilter,
+        searchInput.value.trim().toLowerCase(),
+        resultCounter,
+        dateFrom,
+        dateTo
+      );
+    });
+  }
+
+  // Year select filter
+  if (yearSelect) {
+    yearSelect.addEventListener("change", () => {
+      yearFilter = yearSelect.value;
+      updateVisibility(
+        rows,
+        activeFilter,
+        schoolFilter,
+        yearFilter,
         searchInput.value.trim().toLowerCase(),
         resultCounter,
         dateFrom,
@@ -521,14 +656,14 @@ function initDashboard(): void {
   if (dateFromInput) {
     dateFromInput.addEventListener("change", () => {
       dateFrom = dateFromInput.value;
-      updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+      updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
     });
   }
 
   if (dateToInput) {
     dateToInput.addEventListener("change", () => {
       dateTo = dateToInput.value;
-      updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+      updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
     });
   }
 
@@ -538,7 +673,7 @@ function initDashboard(): void {
       if (dateToInput) dateToInput.value = "";
       dateFrom = "";
       dateTo = "";
-      updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+      updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
     });
   }
 
@@ -579,7 +714,7 @@ function initDashboard(): void {
   // Search input handler
   searchInput.addEventListener("input", () => {
     const term = searchInput.value.trim().toLowerCase();
-    updateVisibility(rows, activeFilter, schoolFilter, term, resultCounter, dateFrom, dateTo);
+    updateVisibility(rows, activeFilter, schoolFilter, yearFilter, term, resultCounter, dateFrom, dateTo);
   });
 
   // View toggle handlers
@@ -607,7 +742,7 @@ function initDashboard(): void {
         const cards = cardView?.querySelectorAll<HTMLElement>(".announcement-card");
         cards?.forEach((card) => {
           const cardRow = card as any;
-          const show = matchesFilter(cardRow, activeFilter, schoolFilter, dateFrom, dateTo) && matchesSearch(cardRow, searchInput.value.trim().toLowerCase());
+          const show = matchesFilter(cardRow, activeFilter, schoolFilter, yearFilter, dateFrom, dateTo) && matchesSearch(cardRow, searchInput.value.trim().toLowerCase());
           card.style.display = show ? "block" : "none";
         });
       }
@@ -618,28 +753,36 @@ function initDashboard(): void {
   const statCards = document.querySelectorAll<HTMLElement>(".stat-card[data-quick-filter]");
   statCards.forEach((card) => {
     card.addEventListener("click", () => {
-      const filterType = card.dataset.quickFilter;
+      const filterType = card.dataset.quickFilter as FilterType | "all";
 
       // Remove active from all stat cards
       statCards.forEach((c) => c.classList.remove("active"));
       card.classList.add("active");
 
       // Apply the corresponding filter
+      chipButtons.forEach((c) => c.classList.remove("active"));
+
       if (filterType === "all") {
-        chipButtons.forEach((c) => c.classList.remove("active"));
         chipButtons[0]?.classList.add("active");
         activeFilter = "none";
       } else if (filterType === "highlight") {
-        chipButtons.forEach((c) => c.classList.remove("active"));
         chipButtons[1]?.classList.add("active");
         activeFilter = "highlight";
       } else if (filterType === "open") {
-        chipButtons.forEach((c) => c.classList.remove("active"));
         chipButtons[2]?.classList.add("active");
         activeFilter = "open";
+      } else if (filterType === "pnrr") {
+        chipButtons[3]?.classList.add("active");
+        activeFilter = "pnrr";
+      } else if (filterType === "pon") {
+        chipButtons[4]?.classList.add("active");
+        activeFilter = "pon";
+      } else if (filterType === "recent") {
+        chipButtons[5]?.classList.add("active");
+        activeFilter = "recent";
       }
 
-      updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+      updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
     });
   });
 
@@ -833,22 +976,6 @@ function initDashboard(): void {
       updateBulkActions();
     });
   }
-  const fetchBtn = document.getElementById("fetchBtn");          
-  if (fetchBtn) {                                                
-    fetchBtn.addEventListener("click", async () => {             
-      fetchBtn.setAttribute("disabled", "true");                 
-      fetchBtn.textContent = "Aggiorno...";                      
-      try {                                                      
-        await fetch("/api/fetch", { method: "POST" });           
-        location.reload();                                       
-      } catch (e) {                                              
-        alert("Errore durante il fetch");                        
-      } finally {                                                
-        fetchBtn.removeAttribute("disabled");                    
-        fetchBtn.textContent = "Aggiorna annunci";               
-      }                                                          
-    });                                                          
-  }          
 
   // Keyboard shortcuts
   document.addEventListener("keydown", (e) => {
@@ -864,7 +991,7 @@ function initDashboard(): void {
       if (document.activeElement === searchInput) {
         searchInput.value = "";
         searchInput.blur();
-        updateVisibility(rows, activeFilter, schoolFilter, "", resultCounter, dateFrom, dateTo);
+        updateVisibility(rows, activeFilter, schoolFilter, yearFilter, "", resultCounter, dateFrom, dateTo);
       }
     }
 
@@ -896,6 +1023,7 @@ function initDashboard(): void {
     currentSort,
     activeFilter,
     schoolFilter,
+    yearFilter,
     "",
     resultCounter,
     dateFrom,
@@ -908,4 +1036,9 @@ function initDashboard(): void {
 }
 
 // Initialize when DOM is ready
-document.addEventListener("DOMContentLoaded", initDashboard);
+console.log("📌 About to add DOMContentLoaded listener...");
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("🎯 DOMContentLoaded fired! Calling initDashboard...");
+  initDashboard();
+});
+console.log("✅ DOMContentLoaded listener added successfully");

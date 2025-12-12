@@ -1,6 +1,7 @@
 """Announcement service - fetches and manages announcements from schools."""
 import logging
 import os
+import re
 import time
 import random
 from datetime import date, datetime, timedelta
@@ -208,6 +209,133 @@ class AnnouncementService:
         except Exception:
             return date.min
 
+    def _extract_date_from_text(self, text: str) -> Optional[date]:
+        """Extract date from Italian text using multiple patterns.
+
+        Tries patterns in order of specificity:
+        1. Dates with context keywords (scadenza, pubblicato, etc.)
+        2. Italian text dates (24 gennaio 2024)
+        3. Numeric formats (DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD)
+
+        Args:
+            text: Text to search for dates
+
+        Returns:
+            Extracted date or None if no valid date found
+        """
+        if not text:
+            return None
+
+        # Define Italian month names mapping
+        italian_months = {
+            'gennaio': '01', 'gen': '01',
+            'febbraio': '02', 'feb': '02',
+            'marzo': '03', 'mar': '03',
+            'aprile': '04', 'apr': '04',
+            'maggio': '05', 'mag': '05',
+            'giugno': '06', 'giu': '06',
+            'luglio': '07', 'lug': '07',
+            'agosto': '08', 'ago': '08',
+            'settembre': '09', 'set': '09',
+            'ottobre': '10', 'ott': '10',
+            'novembre': '11', 'nov': '11',
+            'dicembre': '12', 'dic': '12'
+        }
+
+        # Create pattern fragments
+        month_names = '|'.join(italian_months.keys())
+
+        # Pattern 1: Contextual dates (highest priority)
+        contextual_patterns = [
+            rf'(?:scadenza|pubblicat[oa]|data)[\s:]+(\d{{1,2}})\s+({month_names})\s+(\d{{4}})',
+            rf'(?:scadenza|pubblicat[oa]|data)[\s:]+(\d{{1,2}})[/-](\d{{1,2}})[/-](\d{{4}})',
+            rf'(?:scadenza|pubblicat[oa]|data)[\s:]+(\d{{4}})[/-](\d{{1,2}})[/-](\d{{1,2}})',
+        ]
+
+        # Pattern 2: Italian text dates
+        italian_date_pattern = rf'(\d{{1,2}})\s+({month_names})\s+(\d{{4}})'
+
+        # Pattern 3: Numeric dates
+        numeric_patterns = [
+            r'(\d{1,2})[/-](\d{1,2})[/-](\d{4})',  # DD/MM/YYYY or DD-MM-YYYY
+            r'(\d{4})[/-](\d{1,2})[/-](\d{1,2})',  # YYYY-MM-DD
+        ]
+
+        candidates = []
+
+        # Try contextual patterns first
+        for pattern in contextual_patterns:
+            matches = re.finditer(pattern, text, re.IGNORECASE)
+            for match in matches:
+                try:
+                    groups = match.groups()
+                    if len(groups) == 3:
+                        # Check if it's Italian month format
+                        if groups[1].lower() in italian_months:
+                            day = int(groups[0])
+                            month = int(italian_months[groups[1].lower()])
+                            year = int(groups[2])
+                        elif groups[0].isdigit() and len(groups[0]) == 4:  # YYYY-MM-DD
+                            year, month, day = int(groups[0]), int(groups[1]), int(groups[2])
+                        else:  # DD-MM-YYYY
+                            day, month, year = int(groups[0]), int(groups[1]), int(groups[2])
+
+                        # Validate ranges
+                        if 1900 <= year <= 2030 and 1 <= month <= 12 and 1 <= day <= 31:
+                            parsed_date = date(year, month, day)
+                            candidates.append((parsed_date, 10))  # High priority
+                except (ValueError, TypeError, KeyError):
+                    continue
+
+        # Try Italian text dates
+        matches = re.finditer(italian_date_pattern, text, re.IGNORECASE)
+        for match in matches:
+            try:
+                day = int(match.group(1))
+                month_name = match.group(2).lower()
+                year = int(match.group(3))
+                month = int(italian_months[month_name])
+
+                if 1900 <= year <= 2030 and 1 <= month <= 12 and 1 <= day <= 31:
+                    parsed_date = date(year, month, day)
+                    candidates.append((parsed_date, 8))  # Medium-high priority
+            except (ValueError, TypeError, KeyError):
+                continue
+
+        # Try numeric patterns
+        for pattern in numeric_patterns:
+            matches = re.finditer(pattern, text)
+            for match in matches:
+                try:
+                    groups = match.groups()
+                    if len(groups[0]) == 4:  # YYYY-MM-DD format
+                        year, month, day = int(groups[0]), int(groups[1]), int(groups[2])
+                    else:  # DD/MM/YYYY format
+                        day, month, year = int(groups[0]), int(groups[1]), int(groups[2])
+
+                    # Validate ranges
+                    if 1900 <= year <= 2030 and 1 <= month <= 12 and 1 <= day <= 31:
+                        parsed_date = date(year, month, day)
+                        candidates.append((parsed_date, 5))  # Lower priority
+                except (ValueError, TypeError):
+                    continue
+
+        # Return highest priority candidate that's reasonable
+        if candidates:
+            # Filter future dates beyond 1 year (likely errors)
+            max_future = date.today() + timedelta(days=365)
+            valid_candidates = [
+                (d, p) for d, p in candidates
+                if d <= max_future
+            ]
+
+            if valid_candidates:
+                # Sort by priority (descending) then by date (descending for most recent)
+                valid_candidates.sort(key=lambda x: (x[1], x[0]), reverse=True)
+                return valid_candidates[0][0]
+
+        return None
+
     def _extract_text(self, element) -> str:
         """Extract text from BeautifulSoup element."""
         return element.get_text(strip=True) if element else ""
@@ -221,8 +349,17 @@ class AnnouncementService:
         except (ValueError, TypeError):
             return None
 
-    def _extract_pdf_text(self, pdf_url: str) -> str:
-        """Extract text content from PDF file."""
+    def _extract_pdf_text(self, pdf_url: str) -> tuple[str, Optional[date]]:
+        """Extract text content and date from PDF file.
+
+        Args:
+            pdf_url: URL of PDF to extract from
+
+        Returns:
+            Tuple of (text_content, extracted_date)
+            - text_content: First 5000 chars from first 5 pages
+            - extracted_date: Date found in PDF text, or None
+        """
         try:
             import io
             from PyPDF2 import PdfReader
@@ -239,17 +376,34 @@ class AnnouncementService:
                 text_parts.append(page.extract_text())
 
             full_text = "\n\n".join(text_parts)
-            return full_text[:5000]  # Limit to 5000 chars
+            limited_text = full_text[:5000]  # Limit to 5000 chars
+
+            # Extract date from first 2000 chars of PDF
+            extracted_date = self._extract_date_from_text(full_text[:2000])
+
+            return limited_text, extracted_date
+
         except ImportError:
             logging.warning("PyPDF2 not installed, cannot extract PDF text")
-            return ""
+            return "", None
         except Exception as exc:
             logging.warning(f"Failed to extract PDF text from {pdf_url}: {exc}")
-            return ""
+            return "", None
 
-    def _extract_attachments(self, soup: BeautifulSoup, base_url: str) -> List[Dict]:
-        """Extract attachment links from announcement page."""
+    def _extract_attachments(self, soup: BeautifulSoup, base_url: str) -> tuple[List[Dict], Optional[date]]:
+        """Extract attachment links and earliest PDF date from announcement page.
+
+        Args:
+            soup: BeautifulSoup parsed HTML
+            base_url: Base URL for resolving relative links
+
+        Returns:
+            Tuple of (attachments_list, earliest_pdf_date)
+            - attachments_list: List of attachment dicts with metadata
+            - earliest_pdf_date: Earliest date found in PDFs, or None
+        """
         attachments = []
+        pdf_dates = []  # Collect dates from PDFs
         seen_urls = set()
 
         # Common attachment file extensions
@@ -287,11 +441,14 @@ class AnnouncementService:
                     'type': file_ext or 'unknown'
                 }
 
-                # For PDFs, try to extract text content
+                # For PDFs, try to extract text content and date
                 if file_ext == 'pdf':
-                    pdf_text = self._extract_pdf_text(absolute_url)
+                    pdf_text, pdf_date = self._extract_pdf_text(absolute_url)  # Unpack tuple
                     if pdf_text:
                         attachment['text_content'] = pdf_text
+                    if pdf_date:
+                        pdf_dates.append(pdf_date)
+                        logging.info(f"Extracted date from PDF {absolute_url}: {pdf_date}")
 
                 attachments.append(attachment)
 
@@ -299,7 +456,9 @@ class AnnouncementService:
                 if len(attachments) >= 10:
                     break
 
-        return attachments
+        # Return earliest PDF date (publication date)
+        earliest_pdf_date = min(pdf_dates) if pdf_dates else None
+        return attachments, earliest_pdf_date
 
     def _scrape_detail(self, url: str, school: School) -> Dict:
         """Scrape announcement details from URL."""
@@ -355,8 +514,10 @@ class AnnouncementService:
             first_p = soup.find("p")
             summary = self._extract_text(first_p)
 
-        # Extract date
+        # Extract date with priority: PDF > Meta tags > Detail page text
         date_value = None
+
+        # Priority 1: Meta tags (existing logic)
         if (meta := soup.find("meta", property="article:published_time")) and meta.get("content"):
             date_value = meta["content"]
         elif (meta := soup.find("meta", attrs={"itemprop": "datePublished"})) and meta.get("content"):
@@ -366,7 +527,7 @@ class AnnouncementService:
 
         published = self._parse_date(date_value) if date_value else date.min
 
-        # Extract body
+        # Extract body (moved before attachments to get page text)
         paragraphs = [
             self._extract_text(p)
             for p in soup.find_all("p")
@@ -374,11 +535,40 @@ class AnnouncementService:
         ]
         body = " \n\n".join(paragraphs[:6])
 
-        # Extract attachments
-        attachments = self._extract_attachments(soup, url)
+        # Extract attachments (returns dates too now)
+        attachments, pdf_date = self._extract_attachments(soup, url)
+
+        # Priority 2: PDF dates (if meta tags failed)
+        if published == date.min and pdf_date:
+            published = pdf_date
+            logging.info(f"Using PDF date for {url}: {pdf_date}")
+
+        # Priority 3: Detail page text (if both meta and PDF failed)
+        if published == date.min:
+            # Extract strategic text sections
+            page_text = ""
+
+            # Check metadata sections
+            for selector_params in [
+                {'name': ['div', 'section'], 'class_': re.compile(r'(meta|header|info|data|pubblicat)', re.I)},
+                {'name': ['article', 'main'], 'class_': re.compile(r'(content|article|post)', re.I)},
+            ]:
+                if container := soup.find(**selector_params):
+                    page_text += self._extract_text(container) + " "
+
+            # Fallback: use body paragraphs
+            if len(page_text) < 100:
+                page_text = body
+
+            page_text = page_text[:2000]  # Limit search
+
+            text_date = self._extract_date_from_text(page_text)
+            if text_date:
+                published = text_date
+                logging.info(f"Using detail page text date for {url}: {text_date}")
 
         # Determine status and highlight
-        highlight_keywords = ("avviso", "selezione", "tutor", "bando")
+        highlight_keywords = ("avviso", "selezione", "tutor", "bando", "assunzione", "progetto", "incarico")
         highlight = any(k in title.lower() for k in highlight_keywords)
         status = "Open" if any(k in title.lower() for k in ("selezione", "avviso", "bando")) else "Published"
 

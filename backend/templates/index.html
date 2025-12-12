@@ -1,50 +1,42 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PNRR Futura Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <script>
+        console.log("🔵 INLINE SCRIPT: Page HTML is loading...");
+        console.log("🔵 localStorage test:", localStorage.getItem("alliance_ann_states"));
+    </script>
     <script defer src="{{ url_for('static', filename='js/main.js') }}"></script>
 </head>
-
 <body>
+    <script>
+        console.log("🟡 BODY SCRIPT: Body started loading...");
+    </script>
     <div class="bg-accent"></div>
     <main class="page">
         <header class="hero">
             <div>
                 <p class="eyebrow">Alliance Dashboard Bandi</p>
                 <h1>Avvisi scuola, ordinati e ricercabili</h1>
-                <p class="lede">
-                    Un cruscotto unico per sfogliare gli ultimi bandi, graduatorie e
-                    convocazioni. Cerca, ordina e apri il dettaglio con un clic.
-                </p>
+                <p class="lede">Un cruscotto unico per sfogliare gli ultimi bandi, graduatorie e convocazioni. Cerca, ordina e apri il dettaglio con un clic.</p>
             </div>
             <div class="meta-card">
                 <p class="label">Scuole monitorate</p>
-                {% set schools_list = [] %} {% for ann in announcements %} {% if
-                ann.school_id not in schools_list %} {% set _ =
-                schools_list.append(ann.school_id) %} {% endif %} {% endfor %}
-                <p class="value">
-                    {{ schools_list|length }} scuole attive di Salerno con programmi
-                    PNRR Futura
-                </p>
+                <p class="value">{{ unique_schools|length }} scuole attive di Salerno con programmi PNRR Futura</p>
                 <details class="schools-dropdown">
-                    <summary class="schools-toggle">
-                        📋 Visualizza elenco completo
-                    </summary>
+                    <summary class="schools-toggle">📋 Visualizza elenco completo</summary>
                     <ul class="schools-list">
-                        {% set seen_schools = [] %} {% for ann in announcements %} {% if
-                        ann.school_id not in seen_schools %} {% set _ =
-                        seen_schools.append(ann.school_id) %}
-                        <li class="school-item">
-                            <span class="school-name">{{ ann.school_name }}</span>
-                            {% if ann.city %}
-                            <span class="school-city">{{ ann.city }}</span>
-                            {% endif %}
-                        </li>
-                        {% endif %} {% endfor %}
+                        {% for school in unique_schools %}
+                            <li class="school-item">
+                                <span class="school-name">{{ school.name }}</span>
+                                {% if school.city %}
+                                    <span class="school-city">{{ school.city }}</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
                     </ul>
                 </details>
             </div>
@@ -70,18 +62,36 @@
                     <p class="stat-value">{{ announcements|selectattr('status', 'equalto', 'Open')|list|length }}</p>
                 </div>
             </div>
-            <div class="stat-card clickable" data-quick-filter="pnrr" title="Filtra annunci PNRR">
-                <div class="stat-content">
-                    <p class="stat-label">PNRR</p>
-                    {% set pnrr_count = announcements | selectattr('category') | select('lower') | select('contains', 'pnrr') | list | length %}
-                    <p class="stat-value">{{ pnrr_count }}</p>
-                </div>
-            </div>
             <div class="stat-card clickable" data-quick-filter="pon" title="Filtra annunci PON">
                 <div class="stat-content">
                     <p class="stat-label">PON</p>
-                    {% set pon_count = announcements | selectattr('category') | select('lower') | select('contains', 'pon') | list | length %}
-                    <p class="stat-value">{{ pon_count }}</p>
+                    {% set pon_count = namespace(value=0) %}
+                    {% for ann in announcements %}
+                        {% set category_lower = ann.category.lower() if ann.category else '' %}
+                        {% set summary_lower = ann.summary.lower() if ann.summary else '' %}
+                        {% set title_lower = ann.title.lower() if ann.title else '' %}
+                        {% if 'pon' in category_lower or 'pon' in summary_lower or 'pon' in title_lower or 'programma operativo nazionale' in summary_lower %}
+                            {% set pon_count.value = pon_count.value + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    <p class="stat-value">{{ pon_count.value }}</p>
+                </div>
+            </div>
+            <div class="stat-card clickable" data-quick-filter="pnrr" title="Filtra solo PNRR (esclusi PON)">
+                <div class="stat-content">
+                    <p class="stat-label">Solo PNRR</p>
+                    {% set pnrr_only_count = namespace(value=0) %}
+                    {% for ann in announcements %}
+                        {% set category_lower = ann.category.lower() if ann.category else '' %}
+                        {% set summary_lower = ann.summary.lower() if ann.summary else '' %}
+                        {% set title_lower = ann.title.lower() if ann.title else '' %}
+                        {% set has_pnrr = 'pnrr' in category_lower or 'pnrr' in summary_lower or 'pnrr' in title_lower %}
+                        {% set has_pon = 'pon' in category_lower or 'pon' in summary_lower or 'pon' in title_lower or 'programma operativo nazionale' in summary_lower %}
+                        {% if has_pnrr and not has_pon %}
+                            {% set pnrr_only_count.value = pnrr_only_count.value + 1 %}
+                        {% endif %}
+                    {% endfor %}
+                    <p class="stat-value">{{ pnrr_only_count.value }}</p>
                 </div>
             </div>
             <div class="stat-card clickable" data-quick-filter="recent" title="Ultimi 7 giorni">
@@ -102,9 +112,7 @@
                     </button>
                 </div>
                 <div id="presetsList" class="presets-list">
-                    <p class="empty-message">
-                        Nessun filtro salvato. Configura i filtri e clicca "Salva filtri".
-                    </p>
+                    <p class="empty-message">Nessun filtro salvato. Configura i filtri e clicca "Salva filtri".</p>
                 </div>
             </div>
             <div class="recently-viewed-container">
@@ -115,9 +123,7 @@
                     </button>
                 </div>
                 <div id="recentlyViewedList" class="recently-viewed-list">
-                    <p class="empty-message">
-                        Nessun annuncio visualizzato di recente.
-                    </p>
+                    <p class="empty-message">Nessun annuncio visualizzato di recente.</p>
                 </div>
             </div>
         </section>
@@ -127,13 +133,9 @@
                 <label for="searchInput">Cerca annuncio</label>
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input id="searchInput" type="search" placeholder="Titolo, parola chiave o tag"
-                        autocomplete="off" />
+                    <input id="searchInput" type="search" placeholder="Titolo, parola chiave o tag" autocomplete="off">
                 </div>
-                <p class="hint">
-                    Il filtro è immediato e funziona anche su tag e categoria.
-                    <kbd>Ctrl+K</kbd> per cercare
-                </p>
+                <p class="hint">Il filtro è immediato e funziona anche su tag e categoria. <kbd>Ctrl+K</kbd> per cercare</p>
             </div>
             <div class="filter-chips" aria-label="Filtri rapidi">
                 <button class="chip active" data-filter="none">Tutti</button>
@@ -141,55 +143,70 @@
                 <button class="chip" data-filter="open">Stato: aperti</button>
                 <button class="chip" data-filter="pnrr">Solo PNRR</button>
                 <button class="chip" data-filter="pon">Solo PON</button>
+                <button class="chip" data-filter="recent">Ultimi 7 giorni</button>
             </div>
             <div class="select-filter">
                 <label for="schoolFilter">Filtra per scuola</label>
                 <select id="schoolFilter">
                     <option value="">Tutte le scuole</option>
-                    {% set seen = [] %} {% for ann in announcements %} {% if
-                    ann.school_id not in seen %} {% set _ = seen.append(ann.school_id)
-                    %}
-                    <option value="{{ ann.school_id }}">
-                        {{ ann.school_name }}{% if ann.city %} – {{ ann.city }}{% endif %}
-                    </option>
-                    {% endif %} {% endfor %}
+                    {% set seen = [] %}
+                    {% for ann in announcements %}
+                        {% if ann.school_id not in seen %}
+                            {% set _ = seen.append(ann.school_id) %}
+                            <option value="{{ ann.school_id }}">{{ ann.school_name }}{% if ann.city %} – {{ ann.city }}{% endif %}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="select-filter">
+                <label for="yearFilter">Filtra per anno</label>
+                <select id="yearFilter">
+                    <option value="">Tutti gli anni</option>
+                    {% set years = [] %}
+                    {% for ann in announcements %}
+                        {% if ann.date and ann.date.year not in years %}
+                            {% set _ = years.append(ann.date.year) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% for year in years|sort(reverse=True) %}
+                        <option value="{{ year }}">{{ year }}</option>
+                    {% endfor %}
                 </select>
             </div>
             <div class="date-range-filter">
                 <label for="dateFrom">Intervallo date</label>
                 <div class="date-inputs">
-                    <input type="date" id="dateFrom" placeholder="Da" title="Data inizio" />
+                    <input type="date" id="dateFrom" placeholder="Da" title="Data inizio">
                     <span class="date-separator">→</span>
-                    <input type="date" id="dateTo" placeholder="A" title="Data fine" />
+                    <input type="date" id="dateTo" placeholder="A" title="Data fine">
                     <button class="action-btn small" id="clearDatesBtn" title="Cancella filtro date">
                         ✕
                     </button>
                 </div>
             </div>
             <div class="controls-actions">
+                <button id="fetchBtn" class="action-btn primary" title="Aggiorna annunci da tutte le scuole">
+                    🔄 Aggiorna annunci
+                </button>
                 <button id="exportBtn" class="action-btn" title="Esporta risultati in CSV">
                     📥 Esporta CSV
                 </button>
-                <button id="fetchBtn" class="action-btn" title="Esegui fetch   
-  annunci">
-                    Aggiorna annunci
-                </button>
-                <div class="result-meta">
-                    <span id="resultsCount">{{ announcements|length }} record</span>
-                </div>
             </div>
+        </section>
 
-                    <div class="fetch-status" id="fetchStatus" style="display: none;">
-                <div class="fetch-label">Aggiornamento in corso...</div>
-                <div class="fetch-progress">
-                    <div class="fetch-progress-bar" id="fetchProgressBar"></div>
-                </div>
-                <div class="fetch-meta">
-                    <span id="fetchCurrentSchool"></span>
-                    <span id="fetchProgressText"></span>
-                </div>
+        <!-- Fetch Status (shown when fetching) -->
+        <div class="fetch-status" id="fetchStatus" style="display: none;">
+            <div class="fetch-label">Aggiornamento in corso...</div>
+            <div class="fetch-progress">
+                <div class="fetch-progress-bar" id="fetchProgressBar"></div>
             </div>
-</section>
+            <div class="fetch-meta">
+                <span id="fetchCurrentSchool"></span>
+                <span id="fetchProgressText"></span>
+            </div>
+        </div>
+
+
 
         <!-- Quick Actions Bar -->
         <section class="quick-actions">
@@ -200,7 +217,7 @@
                 <button class="action-btn small" id="deselectAllBtn" title="Deseleziona tutti">
                     ☐ Deseleziona
                 </button>
-                <span id="selectedCount" class="selected-count" style="display: none">
+                <span id="selectedCount" class="selected-count" style="display: none;">
                     <strong>0</strong> selezionati
                 </span>
             </div>
@@ -224,12 +241,12 @@
                     <div class="view-toggle">
                         <button class="view-btn active" data-view="table" title="Vista tabella">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M0 1h16v2H0V1zm0 4h16v2H0V5zm0 4h16v2H0V9zm0 4h16v2H0v-2z" />
+                                <path d="M0 1h16v2H0V1zm0 4h16v2H0V5zm0 4h16v2H0V9zm0 4h16v2H0v-2z"/>
                             </svg>
                         </button>
                         <button class="view-btn" data-view="cards" title="Vista card">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                                <path d="M0 0h7v7H0V0zm9 0h7v7H9V0zM0 9h7v7H0V9zm9 0h7v7H9V9z" />
+                                <path d="M0 0h7v7H0V0zm9 0h7v7H9V0zM0 9h7v7H0V9zm9 0h7v7H9V9z"/>
                             </svg>
                         </button>
                     </div>
@@ -243,9 +260,8 @@
             <table id="annTable">
                 <thead>
                     <tr>
-                        <th style="width: 40px">
-                            <input type="checkbox" id="selectAllCheckbox" title="Seleziona tutti"
-                                aria-label="Seleziona tutti" />
+                        <th style="width: 40px;">
+                            <input type="checkbox" id="selectAllCheckbox" title="Seleziona tutti" aria-label="Seleziona tutti">
                         </th>
                         <th data-sort="title">Annuncio</th>
                         <th data-sort="school">Scuola</th>
@@ -258,15 +274,23 @@
                 </thead>
                 <tbody>
                     {% for ann in announcements %}
-                    <tr class="{% if ann.highlight %}row-highlight{% endif %}" data-id="{{ ann.id }}"
-                        data-date="{{ ann.date.isoformat() if ann.date else '' }}" data-title="{{ ann.title }}"
-                        data-school="{{ ann.school_name }}" data-school-id="{{ ann.school_id }}"
-                        data-city="{{ ann.city or '' }}" data-category="{{ ann.category }}"
-                        data-status="{{ ann.status }}" data-highlight="{{ 'true' if ann.highlight else 'false' }}"
-                        data-search="{{ ann.title }} {{ ann.summary }} {{ ann.school_name }} {{ ann.city or '' }} {{ ann.category }} {{ ', '.join(ann.tags) }}">
+                    <tr
+                        class="{% if ann.highlight %}row-highlight{% endif %}"
+                        data-id="{{ ann.id }}"
+                        data-date="{{ ann.date.isoformat() if ann.date else '' }}"
+                        data-title="{{ ann.title }}"
+                        data-school="{{ ann.school_name }}"
+                        data-school-id="{{ ann.school_id }}"
+                        data-city="{{ ann.city or '' }}"
+                        data-category="{{ ann.category }}"
+                        data-status="{{ ann.status }}"
+                        data-highlight="{{ 'true' if ann.highlight else 'false' }}"
+                        data-summary="{{ ann.summary }}"
+                        data-year="{{ ann.date.year if ann.date else '' }}"
+                        data-search="{{ ann.title }} {{ ann.summary }} {{ ann.school_name }} {{ ann.city or '' }} {{ ann.category }} {{ ', '.join(ann.tags) }}"
+                    >
                         <td>
-                            <input type="checkbox" class="row-checkbox" value="{{ ann.id }}"
-                                aria-label="Seleziona annuncio #{{ ann.id }}" />
+                            <input type="checkbox" class="row-checkbox" value="{{ ann.id }}" aria-label="Seleziona annuncio #{{ ann.id }}">
                         </td>
                         <td>
                             <div class="title-row">
@@ -287,17 +311,18 @@
                             <span class="pill">{{ ann.category }}</span>
                         </td>
                         <td class="numeric">
-                            {% if ann.date and ann.date.year > 1 %} {{ ann.date.strftime('%d
-                            %b %Y') }} {% else %} s.n. {% endif %}
+                            {% if ann.date and ann.date.year > 1 %}
+                                {{ ann.date.strftime('%d %b %Y') }}
+                            {% else %}
+                                s.n.
+                            {% endif %}
                         </td>
                         <td>
                             <span class="pill {{ 'pill-open' if ann.status == 'Open' else '' }}">{{ ann.status }}</span>
                         </td>
                         <td>
                             <div class="actions-stack">
-                                <a class="ghost detail-link"
-                                    href="{{ url_for('announcement.announcement_detail', ann_id=ann.id) }}">Apri
-                                    dettagli</a>
+                                <a class="ghost detail-link" href="{{ url_for('announcement.announcement_detail', ann_id=ann.id) }}">Apri dettagli</a>
                                 <div class="state-control">
                                     <label class="sr-only" for="state-{{ ann.id }}">Stato personale</label>
                                     <select class="state-select" id="state-{{ ann.id }}">
@@ -316,18 +341,26 @@
             </table>
 
             {% if announcements|length == 0 %}
-            <div class="empty">Nessun annuncio trovato.</div>
+                <div class="empty">Nessun annuncio trovato.</div>
             {% endif %}
 
             <!-- Card View (initially hidden) -->
-            <div id="cardView" class="cards-grid" style="display: none">
+            <div id="cardView" class="cards-grid" style="display: none;">
                 {% for ann in announcements %}
                 <div class="announcement-card {% if ann.highlight %}card-highlight{% endif %}"
-                    data-date="{{ ann.date.isoformat() if ann.date else '' }}" data-title="{{ ann.title }}"
-                    data-school="{{ ann.school_name }}" data-school-id="{{ ann.school_id }}"
-                    data-city="{{ ann.city or '' }}" data-category="{{ ann.category }}" data-status="{{ ann.status }}"
-                    data-highlight="{{ 'true' if ann.highlight else 'false' }}"
-                    data-search="{{ ann.title }} {{ ann.summary }} {{ ann.school_name }} {{ ann.city or '' }} {{ ann.category }} {{ ', '.join(ann.tags) }}">
+                     data-id="{{ ann.id }}"
+                     data-date="{{ ann.date.isoformat() if ann.date else '' }}"
+                     data-title="{{ ann.title }}"
+                     data-school="{{ ann.school_name }}"
+                     data-school-id="{{ ann.school_id }}"
+                     data-city="{{ ann.city or '' }}"
+                     data-category="{{ ann.category }}"
+                     data-status="{{ ann.status }}"
+                     data-highlight="{{ 'true' if ann.highlight else 'false' }}"
+                     data-summary="{{ ann.summary }}"
+                     data-year="{{ ann.date.year if ann.date else '' }}"
+                     data-search="{{ ann.title }} {{ ann.summary }} {{ ann.school_name }} {{ ann.city or '' }} {{ ann.category }} {{ ', '.join(ann.tags) }}"
+                >
                     <div class="card-header">
                         <div class="card-meta">
                             <span class="badge">#{{ ann.id }}</span>
@@ -335,8 +368,11 @@
                             {% if ann.highlight %}<span class="pill pill-highlight">⭐ Evidenziato</span>{% endif %}
                         </div>
                         <span class="card-date">
-                            {% if ann.date and ann.date.year > 1 %} {{ ann.date.strftime('%d
-                            %b %Y') }} {% else %} s.n. {% endif %}
+                            {% if ann.date and ann.date.year > 1 %}
+                                {{ ann.date.strftime('%d %b %Y') }}
+                            {% else %}
+                                s.n.
+                            {% endif %}
                         </span>
                     </div>
                     <h3 class="card-title">{{ ann.title }}</h3>
@@ -344,8 +380,7 @@
                     <div class="card-footer">
                         <div class="card-tags">
                             <span class="pill">{{ ann.school_name }}</span>
-                            {% if ann.city %}<span class="pill">{{ ann.city }}</span>{%
-                            endif %}
+                            {% if ann.city %}<span class="pill">{{ ann.city }}</span>{% endif %}
                             <span class="pill">{{ ann.category }}</span>
                         </div>
                         <a class="card-link" href="{{ url_for('announcement.announcement_detail', ann_id=ann.id) }}">
@@ -358,5 +393,4 @@
         </section>
     </main>
 </body>
-
 </html>

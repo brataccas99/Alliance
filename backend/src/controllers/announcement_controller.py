@@ -2,12 +2,161 @@
 import logging
 from datetime import date
 
-from flask import Blueprint, abort, render_template, request, jsonify
+from flask import Blueprint, abort, render_template, request, jsonify, url_for
 
 from ..services import AnnouncementService
 
 announcement_bp = Blueprint("announcement", __name__)
 service = AnnouncementService()
+
+def _normalize_school_key(name: str) -> str:
+    """Normalize school name to avoid duplicates caused by suffixes like ' - PNRR'."""
+    base = (name or "").split(" - ")[0].strip()
+    return base.lower()
+
+# Minimal OpenAPI spec for exposed endpoints
+OPENAPI_SPEC = {
+    "openapi": "3.0.3",
+    "info": {
+        "title": "Alliance Announcements API",
+        "version": "1.0.0",
+        "description": "Endpoints for announcements, fetch status and triggers.",
+    },
+    "paths": {
+        "/api/announcements": {
+            "get": {
+                "summary": "List announcements",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "school_id",
+                        "schema": {"type": "string"},
+                        "required": False,
+                        "description": "Filter announcements by school id",
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Announcements list",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "announcements": {
+                                            "type": "array",
+                                            "items": {"$ref": "#/components/schemas/Announcement"},
+                                        },
+                                        "count": {"type": "integer"},
+                                        "last_updated": {"type": "string", "format": "date-time", "nullable": True},
+                                    },
+                                }
+                            }
+                        },
+                    }
+                },
+            }
+        },
+        "/api/fetch": {
+            "post": {
+                "summary": "Trigger fetch of announcements",
+                "responses": {
+                    "200": {
+                        "description": "Fetch started/completed",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/FetchResponse"}
+                            }
+                        },
+                    },
+                    "500": {
+                        "description": "Fetch error",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                            }
+                        },
+                    },
+                },
+            }
+        },
+        "/api/fetch/status": {
+            "get": {
+                "summary": "Fetch progress",
+                "responses": {
+                    "200": {
+                        "description": "Current progress",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/Progress"}
+                            }
+                        },
+                    }
+                },
+            }
+        },
+    },
+    "components": {
+        "schemas": {
+            "Announcement": {
+                "type": "object",
+                "properties": {
+                    "id": {"type": "integer"},
+                    "title": {"type": "string"},
+                    "summary": {"type": "string"},
+                    "body": {"type": "string"},
+                    "link": {"type": "string"},
+                    "category": {"type": "string"},
+                    "source": {"type": "string"},
+                    "school_id": {"type": "string"},
+                    "school_name": {"type": "string"},
+                    "city": {"type": "string", "nullable": True},
+                    "date": {"type": "string", "format": "date-time"},
+                    "status": {"type": "string", "example": "Open"},
+                    "tags": {"type": "array", "items": {"type": "string"}},
+                    "highlight": {"type": "boolean"},
+                    "attachments": {
+                        "type": "array",
+                        "items": {"$ref": "#/components/schemas/Attachment"},
+                    },
+                },
+                "required": ["id", "title", "link", "school_id", "school_name", "status", "highlight"],
+            },
+            "Attachment": {
+                "type": "object",
+                "properties": {
+                    "url": {"type": "string"},
+                    "label": {"type": "string"},
+                    "type": {"type": "string", "example": "pdf"},
+                },
+            },
+            "Progress": {
+                "type": "object",
+                "properties": {
+                    "status": {"type": "string", "example": "running"},
+                    "total": {"type": "integer"},
+                    "current": {"type": "integer"},
+                    "school": {"type": "string", "nullable": True},
+                },
+            },
+            "FetchResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {"type": "boolean"},
+                    "message": {"type": "string"},
+                    "count": {"type": "integer"},
+                },
+            },
+            "ErrorResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {"type": "boolean", "example": False},
+                    "error": {"type": "string"},
+                },
+            },
+        }
+    },
+}
 
 
 @announcement_bp.route("/")
@@ -46,12 +195,28 @@ def index():
     reverse = order != "asc"
     data.sort(key=sorter, reverse=reverse)
 
+    # Build unique schools list (normalize by stripping suffix after " - ")
+    unique_schools = {}
+    for ann in data:
+        school_name = ann.get("school_name") or ""
+        key = _normalize_school_key(school_name)
+        if not key:
+            continue
+        if key not in unique_schools:
+            base_name = (school_name.split(" - ")[0].strip()) or school_name
+            unique_schools[key] = {
+                "id": key,
+                "name": base_name,
+                "city": ann.get("city"),
+            }
+
     return render_template(
         "index.html",
         announcements=data,
         query=query,
         sort=sort,
         order=order,
+        unique_schools=list(unique_schools.values()),
     )
 
 
@@ -96,6 +261,18 @@ def announcement_detail(ann_id: int):
         next_ann=next_ann,
         attachments=attachments,
     )
+
+
+@announcement_bp.route("/openapi.json")
+def openapi_json():
+    """Serve OpenAPI spec."""
+    return jsonify(OPENAPI_SPEC)
+
+
+@announcement_bp.route("/docs")
+def swagger_ui():
+    """Serve Swagger UI page."""
+    return render_template("swagger.html", spec_url=url_for("announcement.openapi_json"))
 
 
 @announcement_bp.route("/api/fetch", methods=["POST"])

@@ -1,9 +1,7 @@
 # Copy this file to terraform.tfvars and update with your values
 
-project_name = "alliance-pnrr"
-
-# West Europe provides good latency for both Italy and Qatar
-# Other options: North Europe (Ireland), UAE North (Dubai)
-location = "West Europe"
-
-debug = "False"
+project_id      = "your-gcp-project-id"
+project_name    = "alliance-pnrr"
+region          = "europe-west1"
+container_image = "gcr.io/your-gcp-project-id/alliance-backend:latest"
+debug           = "False"

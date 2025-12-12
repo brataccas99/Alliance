@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ announcement.title }}  PNRR Futura</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body class="detail-page">
+    <div class="bg-accent"></div>
+    <main class="page detail">
+        <div class="nav-row">
+            <a class="back" href="{{ url_for('announcement.index') }}">← Torna all'elenco</a>
+            <div class="pager">
+                {% if prev_ann %}
+                    <a class="back" href="{{ url_for('announcement.announcement_detail', ann_id=prev_ann.id) }}">← Precedente</a>
+                {% endif %}
+                {% if next_ann %}
+                    <a class="back" href="{{ url_for('announcement.announcement_detail', ann_id=next_ann.id) }}">Successivo →</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <header class="detail-hero">
+            <div>
+                <p class="eyebrow">{{ announcement.category }}  ·  {{ announcement.source }}</p>
+                <h1>{{ announcement.title }}</h1>
+                <p class="lede">{{ announcement.summary }}</p>
+                <div class="meta-row">
+                    <span class="pill">{{ announcement.school_name }}</span>
+                    {% if announcement.city %}<span class="pill">{{ announcement.city }}</span>{% endif %}
+                    <span class="pill">{{ announcement.category }}</span>
+                    <span class="pill {{ 'pill-open' if announcement.status == 'Open' else '' }}">{{ announcement.status }}</span>
+                    <span class="pill">{% if announcement.date and announcement.date.year > 1 %}{{ announcement.date.strftime('%d %b %Y') }}{% else %}s.n.{% endif %}</span>
+                    {% if announcement.highlight %}<span class="pill pill-highlight">Evidenziato</span>{% endif %}
+                    {% if announcement.tags %}
+                        {% for tag in announcement.tags %}
+                            <span class="pill">{{ tag }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+            <div class="meta-card">
+                <p class="label">ID Annuncio</p>
+                <p class="value">#{{ announcement.id }}</p>
+                <div style="margin-top: 16px;">
+                    <p class="label">Fonte</p>
+                    <p class="value" style="font-size: 13px; word-break: break-all;">{{ announcement.source }}</p>
+                </div>
+                <div class="actions">
+                    <a class="button primary" href="{{ announcement.link }}" target="_blank" rel="noreferrer noopener">Apri sul sito →</a>
+                    <a class="button ghost" href="{{ url_for('announcement.index') }}">← Torna all'elenco</a>
+                </div>
+            </div>
+        </header>
+
+        <section class="detail-body">
+            <article>
+                {% if announcement.body %}
+                    <h3>Dettaglio</h3>
+                    {% for paragraph in announcement.body.split('\n\n') %}
+                        <p>{{ paragraph }}</p>
+                    {% endfor %}
+                {% else %}
+                    <p>Dettaglio non disponibile dal feed. Apri la fonte originale per leggere tutto.</p>
+                {% endif %}
+            </article>
+
+            {% if attachments %}
+            <div class="attachments-section">
+                <h4>Allegati</h4>
+                <div class="attachments-list">
+                    {% for doc in attachments %}
+                        <div class="attachment-item">
+                            <div class="attachment-header">
+                                <span class="attachment-icon">
+                                    {% if doc.type == 'pdf' %}📄
+                                    {% elif doc.type in ['doc', 'docx'] %}📝
+                                    {% elif doc.type in ['xls', 'xlsx'] %}📊
+                                    {% elif doc.type in ['zip', 'rar'] %}📦
+                                    {% else %}📎{% endif %}
+                                </span>
+                                <div class="attachment-info">
+                                    <span class="attachment-label">{{ doc.label }}</span>
+                                    <span class="attachment-type">{{ doc.type|upper if doc.type else 'FILE' }}</span>
+                                </div>
+                                <a class="button ghost small" href="{{ doc.url }}" target="_blank" rel="noreferrer noopener">
+                                    Scarica →
+                                </a>
+                            </div>
+
+                            {% if doc.type == 'pdf' %}
+                                <details class="pdf-viewer">
+                                    <summary>Visualizza contenuto PDF</summary>
+                                    <div class="pdf-content">
+                                        {% if doc.text_content %}
+                                            <div class="pdf-text">
+                                                <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">
+                                                    Contenuto estratto dal PDF (primi 5000 caratteri):
+                                                </p>
+                                                <div class="pdf-text-content">
+                                                    {{ doc.text_content }}
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                        <div class="pdf-embed">
+                                            <iframe src="{{ doc.url }}" width="100%" height="600" style="border: 1px solid var(--border); border-radius: 8px;"></iframe>
+                                        </div>
+                                    </div>
+                                </details>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+    <script>
+        (function () {
+            var annId = String({{ announcement.id }});
+            var title = {{ announcement.title|tojson }};
+            var school = {{ announcement.school_name|tojson }};
+
+            console.log("📄 Detail page loaded for announcement:", annId);
+
+            // Mark as read (only if not already marked as something else)
+            try {
+                var statesRaw = localStorage.getItem("alliance_ann_states");
+                var states = statesRaw ? JSON.parse(statesRaw) : {};
+                var currentState = states[annId];
+
+                console.log("Current state for " + annId + ":", currentState);
+
+                // Only auto-mark as "read" if there's no state or it's "none"
+                if (!currentState || currentState === "none") {
+                    states[annId] = "read";
+                    localStorage.setItem("alliance_ann_states", JSON.stringify(states));
+                    console.log("✅ Marked announcement " + annId + " as read");
+                } else {
+                    console.log("ℹ️ Keeping existing state: " + currentState);
+                }
+            } catch (e) {
+                console.error("❌ Error marking as read:", e);
+            }
+
+            // Add to recently viewed
+            try {
+                var recentRaw = localStorage.getItem("alliance_recent_viewed");
+                var recent = recentRaw ? JSON.parse(recentRaw) : [];
+                var filtered = recent.filter(function (item) { return String(item.id) !== annId; });
+                filtered.unshift({ id: annId, title: title, school: school, viewedAt: new Date().toISOString() });
+                var trimmed = filtered.slice(0, 10);
+                localStorage.setItem("alliance_recent_viewed", JSON.stringify(trimmed));
+                console.log("✅ Added announcement " + annId + " to recently viewed");
+            } catch (e) {
+                console.error("❌ Error adding to recently viewed:", e);
+            }
+        })();
+    </script>
+</body>
+</html>

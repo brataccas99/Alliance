@@ -116,5 +116,47 @@
             {% endif %}
         </section>
     </main>
+    <script>
+        (function () {
+            var annId = String({{ announcement.id }});
+            var title = {{ announcement.title|tojson }};
+            var school = {{ announcement.school_name|tojson }};
+
+            console.log("📄 Detail page loaded for announcement:", annId);
+
+            // Mark as read (only if not already marked as something else)
+            try {
+                var statesRaw = localStorage.getItem("alliance_ann_states");
+                var states = statesRaw ? JSON.parse(statesRaw) : {};
+                var currentState = states[annId];
+
+                console.log("Current state for " + annId + ":", currentState);
+
+                // Only auto-mark as "read" if there's no state or it's "none"
+                if (!currentState || currentState === "none") {
+                    states[annId] = "read";
+                    localStorage.setItem("alliance_ann_states", JSON.stringify(states));
+                    console.log("✅ Marked announcement " + annId + " as read");
+                } else {
+                    console.log("ℹ️ Keeping existing state: " + currentState);
+                }
+            } catch (e) {
+                console.error("❌ Error marking as read:", e);
+            }
+
+            // Add to recently viewed
+            try {
+                var recentRaw = localStorage.getItem("alliance_recent_viewed");
+                var recent = recentRaw ? JSON.parse(recentRaw) : [];
+                var filtered = recent.filter(function (item) { return String(item.id) !== annId; });
+                filtered.unshift({ id: annId, title: title, school: school, viewedAt: new Date().toISOString() });
+                var trimmed = filtered.slice(0, 10);
+                localStorage.setItem("alliance_recent_viewed", JSON.stringify(trimmed));
+                console.log("✅ Added announcement " + annId + " to recently viewed");
+            } catch (e) {
+                console.error("❌ Error adding to recently viewed:", e);
+            }
+        })();
+    </script>
 </body>
 </html>

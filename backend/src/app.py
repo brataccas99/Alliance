@@ -91,8 +91,8 @@ def main() -> None:
     scheduler = None
     service = AnnouncementService()
 
-    # Run initial fetch once on startup (non-reloader) if enabled
-    if initial_fetch and not is_reloader:
+    # Run initial fetch once on startup in non-debug, non-reloader mode if enabled
+    if initial_fetch and not config.DEBUG and not is_reloader:
         try:
             count = service.fetch_and_save()
             logging.info("Initial fetch completed at startup: %s announcements", count)

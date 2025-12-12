@@ -1,23 +1,34 @@
 "use strict";
+console.log("🟢 main.js LOADED - Script is executing!");
+console.log("🕐 Timestamp:", new Date().toISOString());
 const STATE_STORAGE_KEY = "alliance_ann_states";
 const PRESETS_STORAGE_KEY = "alliance_filter_presets";
 const RECENT_STORAGE_KEY = "alliance_recent_viewed";
 function loadStates() {
     try {
         const raw = localStorage.getItem(STATE_STORAGE_KEY);
-        if (!raw)
+        console.log(`🔑 localStorage.getItem("${STATE_STORAGE_KEY}"):`, raw);
+        if (!raw) {
+            console.log("⚠️ No saved states found in localStorage");
             return {};
-        return JSON.parse(raw);
+        }
+        const parsed = JSON.parse(raw);
+        console.log("✅ Parsed states:", parsed);
+        return parsed;
     }
-    catch {
+    catch (e) {
+        console.error("❌ Error loading states:", e);
         return {};
     }
 }
 function saveStates(states) {
     try {
-        localStorage.setItem(STATE_STORAGE_KEY, JSON.stringify(states));
+        const json = JSON.stringify(states);
+        localStorage.setItem(STATE_STORAGE_KEY, json);
+        console.log(`💾 Saved states to localStorage:`, states);
     }
-    catch {
+    catch (e) {
+        console.error("❌ Error saving states:", e);
     }
 }
 function loadPresets() {
@@ -67,7 +78,7 @@ function parseDate(value) {
     const parsed = Date.parse(value);
     return Number.isNaN(parsed) ? 0 : parsed;
 }
-function matchesFilter(row, activeFilter, schoolFilter, dateFrom, dateTo) {
+function matchesFilter(row, activeFilter, schoolFilter, yearFilter, dateFrom, dateTo) {
     if (activeFilter === "highlight" && row.dataset.highlight !== "true") {
         return false;
     }
@@ -75,13 +86,39 @@ function matchesFilter(row, activeFilter, schoolFilter, dateFrom, dateTo) {
         return false;
     }
     const categoryVal = row.dataset.category?.toLowerCase() || "";
-    if (activeFilter === "pnrr" && !categoryVal.includes("pnrr")) {
-        return false;
+    const summaryVal = row.dataset.summary?.toLowerCase() || "";
+    const titleVal = row.dataset.title?.toLowerCase() || "";
+    if (activeFilter === "pon") {
+        const hasPON = categoryVal.includes("pon") ||
+            summaryVal.includes("pon") ||
+            titleVal.includes("pon") ||
+            summaryVal.includes("programma operativo nazionale");
+        if (!hasPON)
+            return false;
     }
-    if (activeFilter === "pon" && !categoryVal.includes("pon")) {
-        return false;
+    if (activeFilter === "pnrr") {
+        const hasPNRR = categoryVal.includes("pnrr") ||
+            summaryVal.includes("pnrr") ||
+            titleVal.includes("pnrr");
+        const hasPON = categoryVal.includes("pon") ||
+            summaryVal.includes("pon") ||
+            titleVal.includes("pon") ||
+            summaryVal.includes("programma operativo nazionale");
+        if (!hasPNRR || hasPON)
+            return false;
+    }
+    if (activeFilter === "recent") {
+        const rowDate = parseDate(row.dataset.date || "");
+        if (rowDate === 0)
+            return false;
+        const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+        if (rowDate < sevenDaysAgo)
+            return false;
     }
     if (schoolFilter && row.dataset.schoolId !== schoolFilter) {
+        return false;
+    }
+    if (yearFilter && row.dataset.year !== yearFilter) {
         return false;
     }
     if (dateFrom || dateTo) {
@@ -107,17 +144,17 @@ function matchesSearch(row, term) {
     const haystack = row.dataset.search?.toLowerCase() || "";
     return haystack.includes(term);
 }
-function updateVisibility(rows, activeFilter, schoolFilter, searchTerm, resultCounter, dateFrom = "", dateTo = "") {
+function updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchTerm, resultCounter, dateFrom = "", dateTo = "") {
     let visible = 0;
     rows.forEach((row) => {
-        const show = matchesFilter(row, activeFilter, schoolFilter, dateFrom, dateTo) && matchesSearch(row, searchTerm);
+        const show = matchesFilter(row, activeFilter, schoolFilter, yearFilter, dateFrom, dateTo) && matchesSearch(row, searchTerm);
         row.style.display = show ? "table-row" : "none";
         if (show)
             visible += 1;
     });
     resultCounter.textContent = `${visible} record`;
 }
-function sortRows(key, rows, tbody, headers, currentSort, activeFilter, schoolFilter, searchTerm, resultCounter, dateFrom = "", dateTo = "") {
+function sortRows(key, rows, tbody, headers, currentSort, activeFilter, schoolFilter, yearFilter, searchTerm, resultCounter, dateFrom = "", dateTo = "") {
     const direction = currentSort.key === key && currentSort.direction === "asc" ? "desc" : "asc";
     const newSort = { key, direction };
     const multiplier = direction === "asc" ? 1 : -1;
@@ -134,27 +171,40 @@ function sortRows(key, rows, tbody, headers, currentSort, activeFilter, schoolFi
         const sortKey = h.dataset.sort;
         h.classList.toggle("active", sortKey === key);
     });
-    updateVisibility(rows, activeFilter, schoolFilter, searchTerm, resultCounter, dateFrom, dateTo);
+    updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchTerm, resultCounter, dateFrom, dateTo);
     return newSort;
 }
 function initDashboard() {
+    console.log("🚀 initDashboard called");
     const table = document.getElementById("annTable");
-    if (!table)
+    if (!table) {
+        console.error("❌ Table not found!");
         return;
+    }
     const tbody = table.querySelector("tbody");
-    if (!tbody)
+    if (!tbody) {
+        console.error("❌ Tbody not found!");
         return;
+    }
     const headers = table.querySelectorAll("th[data-sort]");
     const searchInput = document.getElementById("searchInput");
     const schoolSelect = document.getElementById("schoolFilter");
+    const yearSelect = document.getElementById("yearFilter");
     const resultCounter = document.getElementById("resultsCount");
     const chipButtons = Array.from(document.querySelectorAll(".chip"));
+    console.log("📦 Loading states from localStorage...");
     const personalStates = loadStates();
-    if (!searchInput || !resultCounter)
-        return;
+    console.log("✅ Loaded states:", personalStates);
+    console.log("📊 Number of states:", Object.keys(personalStates).length);
+    const persistState = (annId, newState) => {
+        personalStates[annId] = newState;
+        saveStates(personalStates);
+    };
     let rows = Array.from(tbody.querySelectorAll("tr"));
+    console.log(`📋 Found ${rows.length} rows in table`);
     let activeFilter = "none";
     let schoolFilter = "";
+    let yearFilter = "";
     let currentSort = { key: "date", direction: "desc" };
     const dateFromInput = document.getElementById("dateFrom");
     const dateToInput = document.getElementById("dateTo");
@@ -171,6 +221,7 @@ function initDashboard() {
         saveStates(personalStates);
         const pill = row.querySelector(".state-pill");
         const select = row.querySelector(".state-select");
+        console.log(`applyState for ${annId}: newState="${newState}", pill found:`, !!pill, ", select found:", !!select);
         if (select) {
             select.value = newState;
         }
@@ -188,9 +239,88 @@ function initDashboard() {
                 };
                 pill.textContent = labels[newState];
                 pill.style.display = "inline-block";
+                console.log(`Set pill for ${annId}: "${labels[newState]}", display: inline-block`);
             }
         }
+        else {
+            console.warn(`No pill found for announcement ${annId}`);
+        }
     };
+    console.log("🔄 Starting row initialization...");
+    console.log("📦 States to apply:", personalStates);
+    let rowsProcessed = 0;
+    rows.forEach((row) => {
+        const annId = row.dataset.id || "";
+        const select = row.querySelector(".state-select");
+        const link = row.querySelector(".detail-link");
+        const currentState = personalStates[annId] || "none";
+        console.log(`🔹 Row ${annId}: applying state "${currentState}"`);
+        applyState(row, currentState);
+        rowsProcessed++;
+        if (select) {
+            select.addEventListener("change", () => {
+                applyState(row, select.value);
+            });
+        }
+        if (link) {
+            link.addEventListener("click", () => {
+                const title = row.dataset.title || "";
+                const school = row.dataset.school || "";
+                markAsReadAndTrack(annId, title, school);
+            });
+        }
+    });
+    console.log(`✅ Finished processing ${rowsProcessed} rows`);
+    document.querySelectorAll(".card-link").forEach((cardLink) => {
+        cardLink.addEventListener("click", () => {
+            const card = cardLink.closest(".announcement-card");
+            const annId = card?.dataset.id;
+            if (!annId)
+                return;
+            const title = card.dataset.title || "";
+            const school = card.dataset.school || "";
+            markAsReadAndTrack(annId, title, school);
+        });
+    });
+    const renderRecentlyViewed = () => {
+        if (!recentlyViewedList)
+            return;
+        const recent = loadRecentlyViewed();
+        if (recent.length === 0) {
+            recentlyViewedList.innerHTML = '<p class="empty-message">Nessun annuncio visualizzato di recente.</p>';
+            return;
+        }
+        recentlyViewedList.innerHTML = recent.map((item) => `
+      <a href="/announcement/${item.id}" class="recent-item">
+        <div class="recent-info">
+          <strong class="recent-title">${item.title}</strong>
+          <span class="recent-school">${item.school}</span>
+        </div>
+        <span class="recent-time">${formatTimeAgo(item.viewedAt)}</span>
+      </a>
+    `).join("");
+    };
+    const formatTimeAgo = (isoString) => {
+        const now = new Date().getTime();
+        const then = new Date(isoString).getTime();
+        const diffMs = now - then;
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays === 0)
+            return "Oggi";
+        if (diffDays === 1)
+            return "Ieri";
+        if (diffDays < 7)
+            return `${diffDays}g fa`;
+        return new Date(isoString).toLocaleDateString();
+    };
+    console.log("🕐 Rendering recently viewed...");
+    renderRecentlyViewed();
+    if (!searchInput || !resultCounter) {
+        console.warn("⚠️ searchInput or resultCounter not found - search/filter features disabled");
+        console.log("✅ State persistence is working! Just can't use search/filters.");
+        console.log("✅ Recently viewed is rendered!");
+        return;
+    }
     const renderPresets = () => {
         if (!presetsList)
             return;
@@ -262,7 +392,7 @@ function initDashboard() {
         chipButtons.forEach((chip) => {
             chip.classList.toggle("active", chip.dataset.filter === preset.activeFilter);
         });
-        updateVisibility(rows, activeFilter, schoolFilter, preset.searchTerm, resultCounter, dateFrom, dateTo);
+        updateVisibility(rows, activeFilter, schoolFilter, yearFilter, preset.searchTerm, resultCounter, dateFrom, dateTo);
     };
     const deletePreset = (presetId) => {
         const presets = loadPresets();
@@ -270,67 +400,31 @@ function initDashboard() {
         savePresets(filtered);
         renderPresets();
     };
-    const renderRecentlyViewed = () => {
-        if (!recentlyViewedList)
-            return;
-        const recent = loadRecentlyViewed();
-        if (recent.length === 0) {
-            recentlyViewedList.innerHTML = '<p class="empty-message">Nessun annuncio visualizzato di recente.</p>';
-            return;
-        }
-        recentlyViewedList.innerHTML = recent.map((item) => `
-      <a href="/announcement/${item.id}" class="recent-item">
-        <div class="recent-info">
-          <strong class="recent-title">${item.title}</strong>
-          <span class="recent-school">${item.school}</span>
-        </div>
-        <span class="recent-time">${formatTimeAgo(item.viewedAt)}</span>
-      </a>
-    `).join("");
-    };
-    const formatTimeAgo = (isoString) => {
-        const now = new Date().getTime();
-        const then = new Date(isoString).getTime();
-        const diffMs = now - then;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-        if (diffMins < 1)
-            return "Ora";
-        if (diffMins < 60)
-            return `${diffMins}m fa`;
-        if (diffHours < 24)
-            return `${diffHours}h fa`;
-        if (diffDays < 7)
-            return `${diffDays}g fa`;
-        return new Date(isoString).toLocaleDateString();
-    };
-    rows.forEach((row) => {
-        const annId = row.dataset.id || "";
-        const select = row.querySelector(".state-select");
-        const link = row.querySelector(".detail-link");
-        const currentState = personalStates[annId] || "none";
-        applyState(row, currentState);
-        if (select) {
-            select.addEventListener("change", () => {
-                applyState(row, select.value);
-            });
-        }
-        if (link) {
-            link.addEventListener("click", () => {
+    const markAsReadAndTrack = (annId, title, school) => {
+        console.log(`📖 markAsReadAndTrack called for ${annId}`);
+        const currentState = personalStates[annId];
+        console.log(`Current state: ${currentState}`);
+        if (!currentState || currentState === "none") {
+            const row = tbody.querySelector(`tr[data-id="${annId}"]`);
+            if (row) {
                 applyState(row, "read");
-                const title = row.dataset.title || "";
-                const school = row.dataset.school || "";
-                addRecentlyViewed(annId, title, school);
-                renderRecentlyViewed();
-            });
+            }
+            else {
+                persistState(annId, "read");
+            }
+            console.log(`✅ Marked ${annId} as read`);
         }
-    });
+        else {
+            console.log(`ℹ️ Preserving existing state "${currentState}" for ${annId}`);
+        }
+        addRecentlyViewed(annId, title, school);
+        renderRecentlyViewed();
+    };
     headers.forEach((header) => {
         header.addEventListener("click", () => {
             const sortKey = header.dataset.sort;
             if (sortKey) {
-                currentSort = sortRows(sortKey, rows, tbody, headers, currentSort, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+                currentSort = sortRows(sortKey, rows, tbody, headers, currentSort, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
             }
         });
     });
@@ -339,25 +433,31 @@ function initDashboard() {
             chipButtons.forEach((c) => c.classList.remove("active"));
             chip.classList.add("active");
             activeFilter = chip.dataset.filter;
-            updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+            updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
         });
     });
     if (schoolSelect) {
         schoolSelect.addEventListener("change", () => {
             schoolFilter = schoolSelect.value;
-            updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+            updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+        });
+    }
+    if (yearSelect) {
+        yearSelect.addEventListener("change", () => {
+            yearFilter = yearSelect.value;
+            updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
         });
     }
     if (dateFromInput) {
         dateFromInput.addEventListener("change", () => {
             dateFrom = dateFromInput.value;
-            updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+            updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
         });
     }
     if (dateToInput) {
         dateToInput.addEventListener("change", () => {
             dateTo = dateToInput.value;
-            updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+            updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
         });
     }
     if (clearDatesBtn) {
@@ -368,7 +468,7 @@ function initDashboard() {
                 dateToInput.value = "";
             dateFrom = "";
             dateTo = "";
-            updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+            updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
         });
     }
     if (savePresetBtn) {
@@ -402,7 +502,7 @@ function initDashboard() {
     }
     searchInput.addEventListener("input", () => {
         const term = searchInput.value.trim().toLowerCase();
-        updateVisibility(rows, activeFilter, schoolFilter, term, resultCounter, dateFrom, dateTo);
+        updateVisibility(rows, activeFilter, schoolFilter, yearFilter, term, resultCounter, dateFrom, dateTo);
     });
     const viewButtons = document.querySelectorAll(".view-btn");
     const tableView = document.getElementById("annTable");
@@ -426,7 +526,7 @@ function initDashboard() {
                 const cards = cardView?.querySelectorAll(".announcement-card");
                 cards?.forEach((card) => {
                     const cardRow = card;
-                    const show = matchesFilter(cardRow, activeFilter, schoolFilter, dateFrom, dateTo) && matchesSearch(cardRow, searchInput.value.trim().toLowerCase());
+                    const show = matchesFilter(cardRow, activeFilter, schoolFilter, yearFilter, dateFrom, dateTo) && matchesSearch(cardRow, searchInput.value.trim().toLowerCase());
                     card.style.display = show ? "block" : "none";
                 });
             }
@@ -438,22 +538,32 @@ function initDashboard() {
             const filterType = card.dataset.quickFilter;
             statCards.forEach((c) => c.classList.remove("active"));
             card.classList.add("active");
+            chipButtons.forEach((c) => c.classList.remove("active"));
             if (filterType === "all") {
-                chipButtons.forEach((c) => c.classList.remove("active"));
                 chipButtons[0]?.classList.add("active");
                 activeFilter = "none";
             }
             else if (filterType === "highlight") {
-                chipButtons.forEach((c) => c.classList.remove("active"));
                 chipButtons[1]?.classList.add("active");
                 activeFilter = "highlight";
             }
             else if (filterType === "open") {
-                chipButtons.forEach((c) => c.classList.remove("active"));
                 chipButtons[2]?.classList.add("active");
                 activeFilter = "open";
             }
-            updateVisibility(rows, activeFilter, schoolFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
+            else if (filterType === "pnrr") {
+                chipButtons[3]?.classList.add("active");
+                activeFilter = "pnrr";
+            }
+            else if (filterType === "pon") {
+                chipButtons[4]?.classList.add("active");
+                activeFilter = "pon";
+            }
+            else if (filterType === "recent") {
+                chipButtons[5]?.classList.add("active");
+                activeFilter = "recent";
+            }
+            updateVisibility(rows, activeFilter, schoolFilter, yearFilter, searchInput.value.trim().toLowerCase(), resultCounter, dateFrom, dateTo);
         });
     });
     const exportBtn = document.getElementById("exportBtn");
@@ -637,7 +747,7 @@ function initDashboard() {
             if (document.activeElement === searchInput) {
                 searchInput.value = "";
                 searchInput.blur();
-                updateVisibility(rows, activeFilter, schoolFilter, "", resultCounter, dateFrom, dateTo);
+                updateVisibility(rows, activeFilter, schoolFilter, yearFilter, "", resultCounter, dateFrom, dateTo);
             }
         }
         if ((e.ctrlKey || e.metaKey) && e.key === "a" && document.activeElement !== searchInput) {
@@ -653,9 +763,14 @@ function initDashboard() {
             exportBtn?.click();
         }
     });
-    currentSort = sortRows("date", rows, tbody, headers, currentSort, activeFilter, schoolFilter, "", resultCounter, dateFrom, dateTo);
+    currentSort = sortRows("date", rows, tbody, headers, currentSort, activeFilter, schoolFilter, yearFilter, "", resultCounter, dateFrom, dateTo);
     renderPresets();
     renderRecentlyViewed();
 }
-document.addEventListener("DOMContentLoaded", initDashboard);
+console.log("📌 About to add DOMContentLoaded listener...");
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("🎯 DOMContentLoaded fired! Calling initDashboard...");
+    initDashboard();
+});
+console.log("✅ DOMContentLoaded listener added successfully");
 //# sourceMappingURL=main.js.map
