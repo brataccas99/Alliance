@@ -1,32 +1,19 @@
-output "app_url" {
-  description = "URL of the deployed container app"
-  value       = "https://${azurerm_container_app.main.latest_revision_fqdn}"
+output "service_url" {
+  description = "Public URL of the Cloud Run service"
+  value       = google_cloud_run_service.backend.status[0].url
 }
 
-output "acr_login_server" {
-  description = "Container Registry login server"
-  value       = azurerm_container_registry.main.login_server
+output "run_service_name" {
+  description = "Deployed Cloud Run service name"
+  value       = google_cloud_run_service.backend.name
 }
 
-output "acr_admin_username" {
-  description = "Container Registry admin username"
-  value       = azurerm_container_registry.main.admin_username
-  sensitive   = true
+output "artifact_registry_repo" {
+  description = "Artifact Registry repo URL (if used)"
+  value       = "${google_artifact_registry_repository.repo.location}-docker.pkg.dev/${google_artifact_registry_repository.repo.project}/${google_artifact_registry_repository.repo.repository_id}"
 }
 
-output "acr_admin_password" {
-  description = "Container Registry admin password"
-  value       = azurerm_container_registry.main.admin_password
-  sensitive   = true
-}
-
-output "cosmos_connection_string" {
-  description = "Cosmos DB MongoDB connection string"
-  value       = azurerm_cosmosdb_account.main.primary_mongodb_connection_string
-  sensitive   = true
-}
-
-output "resource_group_name" {
-  description = "Name of the resource group"
-  value       = azurerm_resource_group.main.name
+output "service_account_email" {
+  description = "Service account used by Cloud Run"
+  value       = google_service_account.run_sa.email
 }

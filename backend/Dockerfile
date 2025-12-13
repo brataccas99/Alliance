@@ -32,12 +32,12 @@ RUN useradd -m -u 1000 appuser && \
 
 USER appuser
 
-# Expose port
-EXPOSE 5000
+# Expose port (Cloud Run will override this with PORT env var)
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:5000/', timeout=5)" || exit 1
+    CMD python -c "import os; import requests; port = os.getenv('PORT', '8080'); requests.get(f'http://localhost:{port}/', timeout=5)" || exit 1
 
 # Run the application with gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "src.app:create_app()"]
+CMD gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 4 --timeout 120 "src.app:create_app()"

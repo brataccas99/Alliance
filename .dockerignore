@@ -1,0 +1,53 @@
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.Python
+**/env
+**/venv
+**/.venv
+**/pip-log.txt
+**/.pytest_cache
+**/.coverage
+**/.mypy_cache
+
+# Node
+**/node_modules
+**/npm-debug.log
+**/package-lock.json
+
+# Git
+**/.git
+**/.gitignore
+**/.gitattributes
+
+# IDE
+**/.vscode
+**/.idea
+**/*.swp
+**/*.swo
+**/*~
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Build artifacts
+frontend/dist
+backend/templates
+backend/static
+
+# Cloud & Terraform
+cloud/
+**/.terraform
+**/*.tfstate
+**/*.tfstate.backup
+
+# Documentation
+**/*.md
+!backend/README.md
+
+# Misc
+**/.env
+**/*.log

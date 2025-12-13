@@ -64,10 +64,6 @@ resource "google_cloud_run_service" "backend" {
           value = "0.0.0.0"
         }
         env {
-          name  = "PORT"
-          value = "5000"
-        }
-        env {
           name  = "INITIAL_FETCH"
           value = "false"
         }
@@ -96,8 +92,4 @@ resource "google_cloud_run_service_iam_member" "public_invoker" {
   service  = google_cloud_run_service.backend.name
   role     = "roles/run.invoker"
   member   = "allUsers"
-}
-
-output "service_url" {
-  value = google_cloud_run_service.backend.status[0].url
 }
