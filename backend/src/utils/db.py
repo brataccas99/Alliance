@@ -38,6 +38,42 @@ def get_collection() -> Optional[Collection]:
     client = get_client()
     if not client:
         return None
+
+
+def get_subscribers_collection() -> Optional[Collection]:
+    """Get subscribers collection from MongoDB.
+
+    Returns:
+        MongoDB collection instance if available, None otherwise.
+    """
+    client = get_client()
+    if not client:
+        return None
+    try:
+        db = client.get_default_database()
+        return db.get_collection("subscribers")
+    except Exception as exc:  # noqa: BLE001
+        logging.warning("Mongo subscribers collection unavailable: %s", exc)
+        return None
+
+
+def get_notifications_collection() -> Optional[Collection]:
+    """Get notifications collection from MongoDB.
+
+    Used to dedupe announcement emails per subscriber.
+
+    Returns:
+        MongoDB collection instance if available, None otherwise.
+    """
+    client = get_client()
+    if not client:
+        return None
+    try:
+        db = client.get_default_database()
+        return db.get_collection("notifications")
+    except Exception as exc:  # noqa: BLE001
+        logging.warning("Mongo notifications collection unavailable: %s", exc)
+        return None
     try:
         db = client.get_default_database()
         return db.get_collection("announcements")

@@ -14,6 +14,8 @@ from dateutil import parser as dateparser
 
 from ..config.schools import School, get_active_schools
 from ..utils import JSONStorage
+from .notification_service import NotificationService
+from .subscriber_service import SubscriberService
 
 CACHE_TTL = timedelta(minutes=30)
 STALE_AFTER = timedelta(days=180)
@@ -49,6 +51,12 @@ class AnnouncementService:
             "total": 0,
             "current": 0,
             "school": None,
+        }
+        self._last_fetch_stats: Dict[str, object] = {
+            "last_run": None,
+            "total_count": 0,
+            "new_count": 0,
+            "emails_sent": 0,
         }
         self._last_request_time = 0.0
         self._request_count = 0
@@ -678,6 +686,7 @@ class AnnouncementService:
         now = datetime.utcnow()
         now_iso = now.isoformat()
         merged: List[Dict] = []
+        newly_seen: List[Dict] = []
 
         for item in scraped_items:
             key = (item.get("school_id"), item.get("link"))
@@ -691,6 +700,7 @@ class AnnouncementService:
             else:
                 merged_item = dict(item)
                 merged_item["first_seen"] = now_iso
+                newly_seen.append(merged_item)
             merged_item["last_seen"] = now_iso
             merged.append(merged_item)
 
@@ -727,7 +737,27 @@ class AnnouncementService:
 
         self._set_progress("idle", 0, 0, None)
         logging.info(f"Saved {len(pruned)} total announcements from {len(schools)} schools (merged, pruned)")
+
+        # Notify subscribers about newly seen announcements (best-effort).
+        emails_sent = 0
+        try:
+            emails_sent = NotificationService().notify(SubscriberService().list_active(), newly_seen)
+            if emails_sent:
+                logging.info("Sent %s notification email(s) for %s new announcement(s)", emails_sent, len(newly_seen))
+        except Exception as exc:  # noqa: BLE001
+            logging.warning("Subscriber notification failed: %s", exc)
+
+        self._last_fetch_stats = {
+            "last_run": datetime.utcnow().isoformat(),
+            "total_count": len(pruned),
+            "new_count": len(newly_seen),
+            "emails_sent": emails_sent,
+        }
         return len(pruned)
+
+    def get_last_fetch_stats(self) -> Dict[str, object]:
+        """Get stats from the last fetch run."""
+        return dict(self._last_fetch_stats)
 
     def get_all_announcements(self, use_cache: bool = True) -> List[Dict]:
         """Get all announcements.

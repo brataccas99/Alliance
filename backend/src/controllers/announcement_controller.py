@@ -95,6 +95,68 @@ OPENAPI_SPEC = {
                 },
             }
         },
+        "/api/subscribe": {
+            "post": {
+                "summary": "Subscribe to email notifications",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/SubscribeRequest"}
+                        }
+                    },
+                },
+                "responses": {
+                    "200": {
+                        "description": "Subscribed",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/SubscribeResponse"}
+                            }
+                        },
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                            }
+                        },
+                    },
+                },
+            }
+        },
+        "/api/unsubscribe": {
+            "post": {
+                "summary": "Unsubscribe from email notifications",
+                "requestBody": {
+                    "required": True,
+                    "content": {
+                        "application/json": {
+                            "schema": {"$ref": "#/components/schemas/UnsubscribeRequest"}
+                        }
+                    },
+                },
+                "responses": {
+                    "200": {
+                        "description": "Unsubscribed",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/UnsubscribeResponse"}
+                            }
+                        },
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/ErrorResponse"}
+                            }
+                        },
+                    },
+                },
+            }
+        },
     },
     "components": {
         "schemas": {
@@ -145,6 +207,49 @@ OPENAPI_SPEC = {
                     "success": {"type": "boolean"},
                     "message": {"type": "string"},
                     "count": {"type": "integer"},
+                    "stats": {"$ref": "#/components/schemas/FetchStats"},
+                },
+            },
+            "FetchStats": {
+                "type": "object",
+                "properties": {
+                    "last_run": {"type": "string", "format": "date-time", "nullable": True},
+                    "total_count": {"type": "integer"},
+                    "new_count": {"type": "integer"},
+                    "emails_sent": {"type": "integer"},
+                },
+            },
+            "SubscribeRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {"type": "string"},
+                    "school_ids": {"type": "array", "items": {"type": "string"}, "nullable": True},
+                },
+                "required": ["email"],
+            },
+            "SubscribeResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {"type": "boolean"},
+                    "subscriber": {
+                        "type": "object",
+                        "properties": {
+                            "email": {"type": "string"},
+                            "school_ids": {"type": "array", "items": {"type": "string"}, "nullable": True},
+                        },
+                    },
+                },
+            },
+            "UnsubscribeRequest": {
+                "type": "object",
+                "properties": {"email": {"type": "string"}},
+                "required": ["email"],
+            },
+            "UnsubscribeResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {"type": "boolean"},
+                    "unsubscribed": {"type": "boolean"},
                 },
             },
             "ErrorResponse": {
@@ -280,10 +385,12 @@ def fetch_announcements():
     """API endpoint to trigger fetching announcements from all schools."""
     try:
         count = service.fetch_and_save()
+        stats = service.get_last_fetch_stats()
         return jsonify({
             "success": True,
             "message": f"Fetched {count} announcements",
-            "count": count
+            "count": count,
+            "stats": stats,
         })
     except Exception as exc:
         logging.error(f"Error fetching announcements: {exc}")

@@ -5,3 +5,21 @@ project_name    = "alliance-pnrr"
 region          = "europe-west1"
 container_image = "gcr.io/your-gcp-project-id/alliance-backend:latest"
 debug           = "False"
+
+# Email notifications (SMTP)
+email_notifications_enabled = "false"
+smtp_host                  = ""
+smtp_port                  = "587"
+smtp_username              = ""
+smtp_password              = ""
+smtp_use_tls               = "true"
+email_from                 = ""
+email_reply_to             = ""
+email_subject_prefix       = "[Alliance] "
+
+# Public base URL (used for unsubscribe links)
+app_base_url = ""
+
+# Optional: persist JSON files in GCS (recommended for Cloud Run)
+gcs_bucket_name = ""
+gcs_prefix      = "data/"

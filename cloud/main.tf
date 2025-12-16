@@ -23,10 +23,32 @@ resource "google_project_service" "artifactregistry" {
   service = "artifactregistry.googleapis.com"
 }
 
+resource "google_project_service" "storage" {
+  project = var.project_id
+  service = "storage.googleapis.com"
+}
+
 # Service account for Cloud Run
 resource "google_service_account" "run_sa" {
   account_id   = "${var.project_name}-run-sa"
   display_name = "Cloud Run runtime for ${var.project_name}"
+}
+
+# Optional: storage bucket for JSON persistence
+resource "google_storage_bucket" "json_bucket" {
+  count                       = var.gcs_bucket_name != "" ? 1 : 0
+  name                        = var.gcs_bucket_name
+  location                    = var.region
+  uniform_bucket_level_access = true
+
+  depends_on = [google_project_service.storage]
+}
+
+resource "google_storage_bucket_iam_member" "json_bucket_admin" {
+  count  = var.gcs_bucket_name != "" ? 1 : 0
+  bucket = google_storage_bucket.json_bucket[0].name
+  role   = "roles/storage.objectAdmin"
+  member = "serviceAccount:${google_service_account.run_sa.email}"
 }
 
 # Optional: artifact registry to host images (regional)
@@ -70,6 +92,54 @@ resource "google_cloud_run_service" "backend" {
         env {
           name  = "SCHEDULER_ENABLED"
           value = "false"
+        }
+        env {
+          name  = "EMAIL_NOTIFICATIONS_ENABLED"
+          value = var.email_notifications_enabled
+        }
+        env {
+          name  = "SMTP_HOST"
+          value = var.smtp_host
+        }
+        env {
+          name  = "SMTP_PORT"
+          value = var.smtp_port
+        }
+        env {
+          name  = "SMTP_USERNAME"
+          value = var.smtp_username
+        }
+        env {
+          name  = "SMTP_PASSWORD"
+          value = var.smtp_password
+        }
+        env {
+          name  = "SMTP_USE_TLS"
+          value = var.smtp_use_tls
+        }
+        env {
+          name  = "EMAIL_FROM"
+          value = var.email_from
+        }
+        env {
+          name  = "EMAIL_REPLY_TO"
+          value = var.email_reply_to
+        }
+        env {
+          name  = "EMAIL_SUBJECT_PREFIX"
+          value = var.email_subject_prefix
+        }
+        env {
+          name  = "APP_BASE_URL"
+          value = var.app_base_url
+        }
+        env {
+          name  = "GCS_BUCKET"
+          value = var.gcs_bucket_name
+        }
+        env {
+          name  = "GCS_PREFIX"
+          value = var.gcs_prefix
         }
       }
     }

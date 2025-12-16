@@ -7,7 +7,7 @@ from typing import Optional
 from flask import Flask
 
 from .config import get_config
-from .controllers import announcement_bp
+from .controllers import announcement_bp, subscriber_bp
 from .services import AnnouncementService
 
 try:
@@ -46,6 +46,7 @@ def create_app(config_name: str = "default") -> Flask:
 
     # Register blueprints
     app.register_blueprint(announcement_bp)
+    app.register_blueprint(subscriber_bp)
 
     # Setup logging
     logging.basicConfig(

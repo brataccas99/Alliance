@@ -143,6 +143,17 @@ Environment variables (set in `.env` file):
 - `HOST`: Host to bind (default: 0.0.0.0)
 - `PORT`: Port to listen (default: 5000)
 - `MONGO_URI`: MongoDB connection string
+- `EMAIL_NOTIFICATIONS_ENABLED`: Enable subscriber emails (true/false)
+- `SMTP_HOST`/`SMTP_PORT`/`SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_USE_TLS`: SMTP settings
+- `EMAIL_FROM`: From email address
+- `EMAIL_REPLY_TO`: Reply-To email address (optional)
+- `EMAIL_SUBJECT_PREFIX`: Prefix for email subjects
+- `APP_BASE_URL`: Public base URL for unsubscribe links
+
+## Subscriptions
+
+- Subscribe: `POST /api/subscribe` JSON `{ "email": "user@example.com", "school_ids": ["school1","school2"] }` (omit `school_ids` for all)
+- Unsubscribe: `POST /api/unsubscribe` JSON `{ "email": "user@example.com" }`
 
 ## Development
 

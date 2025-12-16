@@ -1,9 +1,12 @@
 """JSON file storage utilities."""
 import json
 import logging
+import os
 from datetime import date, datetime
 from pathlib import Path
 from typing import Dict, List, Optional
+
+from .blob_json_store import BlobJsonStore
 
 
 class JSONStorage:
@@ -16,10 +19,14 @@ class JSONStorage:
             data_file: Name of the JSON data file.
         """
         self.data_path = Path(__file__).parent.parent.parent / "data" / data_file
+        self._store = BlobJsonStore(local_path=self.data_path, object_name=data_file)
         self._ensure_data_file()
 
     def _ensure_data_file(self) -> None:
         """Ensure data file and directory exist."""
+        if os.getenv("GCS_BUCKET"):
+            # For GCS, don't pre-create on disk; just attempt a load on first use.
+            return
         self.data_path.parent.mkdir(parents=True, exist_ok=True)
         if not self.data_path.exists():
             self._write_data({"last_updated": None, "announcements": []})
@@ -59,15 +66,12 @@ class JSONStorage:
         Returns:
             Dictionary with announcements data.
         """
+        default = {"last_updated": None, "announcements": []}
         try:
-            with open(self.data_path, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except FileNotFoundError:
-            logging.warning(f"Data file not found: {self.data_path}")
-            return {"last_updated": None, "announcements": []}
+            return self._store.load(default)
         except json.JSONDecodeError as exc:
             logging.error(f"Invalid JSON in data file: {exc}")
-            return {"last_updated": None, "announcements": []}
+            return default
 
     def _write_data(self, data: Dict) -> None:
         """Write data to JSON file.
@@ -76,9 +80,10 @@ class JSONStorage:
             data: Dictionary to write.
         """
         try:
-            with open(self.data_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=2, ensure_ascii=False, default=self._serialize_date)
-            logging.info(f"Data written to {self.data_path}")
+            text = json.dumps(data, indent=2, ensure_ascii=False, default=self._serialize_date)
+            # BlobJsonStore expects dict; keep same serialization output.
+            self._store.save(json.loads(text))
+            logging.info("Data written to %s", self.data_path)
         except Exception as exc:
             logging.error(f"Failed to write data file: {exc}")
 
